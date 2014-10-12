@@ -14,7 +14,6 @@ import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
@@ -41,6 +40,7 @@ import com.tt.mongoexplorer.domain.Collection;
 import com.tt.mongoexplorer.domain.Database;
 import com.tt.mongoexplorer.domain.Host;
 import com.tt.mongoexplorer.utils.MongoUtils;
+import com.tt.mongoexplorer.utils.UIUtils;
 
 @SuppressWarnings("serial")
 public class QueryPanel extends JPanel implements ActionListener, NavigationCallback, TreeSelectionListener {
@@ -90,7 +90,27 @@ public class QueryPanel extends JPanel implements ActionListener, NavigationCall
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if ("find".equals(e.getActionCommand())) {
-			find();
+			if (selectedHost == null) {
+				UIUtils.error(this, "Please select the host");
+				return;
+			}
+			if (selectedDatabase == null) {
+				UIUtils.error(this, "Please select the database");
+				return;
+			}
+			if (selectedCollection == null) {
+				UIUtils.error(this, "Please select the collection");
+				return;
+			}
+			Runnable runnable = new Runnable() {
+				@Override
+				public void run() {
+					find.setEnabled(false);
+					handleQuery();
+					find.setEnabled(true);
+				}
+			};
+			SwingUtilities.invokeLater(runnable);
 		}
 	}
 
@@ -119,14 +139,17 @@ public class QueryPanel extends JPanel implements ActionListener, NavigationCall
 			this.selectedHost = collection.getDatabase().getHost();
 			this.selectedDatabase = collection.getDatabase();
 			this.selectedCollection = collection;
+			Runnable runnable = new Runnable() {
+				@Override
+				public void run() {
+					find.setEnabled(false);
+					handleQuery();
+					find.setEnabled(true);
+				}
+			};
+			SwingUtilities.invokeLater(runnable);
 		}
 		updateInfo();
-	}
-	
-	@Override
-	public void onQueryRequested(String query) {
-		this.query.setText(query);
-		find();
 	}
 	
 	@Override
@@ -142,6 +165,7 @@ public class QueryPanel extends JPanel implements ActionListener, NavigationCall
 		if (object instanceof CustomNode) {
 			CustomNode customNode = (CustomNode) object;
 			area.setText(customNode.object.toString());
+			area.setCaretPosition(0);
 		}
 	}
 	
@@ -232,67 +256,38 @@ public class QueryPanel extends JPanel implements ActionListener, NavigationCall
 		
 	}
 	
-	private void find() {
-		
-		if (selectedHost == null) {
-			JOptionPane.showMessageDialog(parent, "Please select a host first");
-			return;
-		}
-		
-		if (selectedDatabase == null) {
-			JOptionPane.showMessageDialog(parent, "Please select a database first");
-			return;
-		}
-		
-		if (selectedCollection == null) {
-			JOptionPane.showMessageDialog(parent, "Please select a collection first");
-			return;
-		}
-		
-		Runnable runnable = new Runnable() {
-			@Override
-			public void run() {
-				
-				// clear tree
-				root.removeAllChildren();
-				treeModel.nodeStructureChanged(root);
-				
-				// clear json
-				area.setText("");
-				
-				find.setEnabled(false);
-				MongoClient client = null;
-				try {
-					client = MongoUtils.getMongoClient(selectedHost);
-					long start = System.currentTimeMillis();
-					DBCursor cursor = null;
-					if (query.getText() != null && query.getText().length() > 0) {
-						DBObject ref = (DBObject) JSON.parse(query.getText());
-						cursor = client.getDB(selectedDatabase.getName()).getCollection(selectedCollection.getName()).find(ref);
-					} else {
-						cursor = client.getDB(selectedDatabase.getName()).getCollection(selectedCollection.getName()).find();
-					}
-					long end = System.currentTimeMillis();
-					while (cursor.hasNext()) {
-						DBObject dbo = cursor.next();
-						String key = dbo.get("_id") == null ? "" : dbo.get("_id").toString();
-						DefaultMutableTreeNode dmtn = new DefaultMutableTreeNode(new CustomNode(key, dbo));
-						root.add(dmtn);
-						walk(dbo, dmtn);
-						treeModel.nodeStructureChanged(root);
-					}
-					time.setText((end - start) + " ms | " + cursor.count() + " result(s)");
-				} catch (Exception e) {
-					e.printStackTrace(System.err);
-				} finally {
-					if (client != null) {
-						client.close();
-					}
-				}
-				find.setEnabled(true);
+	private void handleQuery() {
+		root.removeAllChildren();
+		treeModel.nodeStructureChanged(root);
+		area.setText("");
+		MongoClient client = null;
+		try {
+			client = MongoUtils.getMongoClient(selectedHost);
+			long start = System.currentTimeMillis();
+			DBCursor cursor = null;
+			if (query.getText() != null && query.getText().length() > 0) {
+				DBObject ref = (DBObject) JSON.parse(query.getText());
+				cursor = client.getDB(selectedDatabase.getName()).getCollection(selectedCollection.getName()).find(ref);
+			} else {
+				cursor = client.getDB(selectedDatabase.getName()).getCollection(selectedCollection.getName()).find();
 			}
-		};
-		SwingUtilities.invokeLater(runnable);
+			long end = System.currentTimeMillis();
+			while (cursor.hasNext()) {
+				DBObject dbo = cursor.next();
+				String key = dbo.get("_id") == null ? "" : dbo.get("_id").toString();
+				DefaultMutableTreeNode dmtn = new DefaultMutableTreeNode(new CustomNode(key, dbo));
+				root.add(dmtn);
+				walk(dbo, dmtn);
+				treeModel.nodeStructureChanged(root);
+			}
+			time.setText((end - start) + " ms | " + cursor.count() + " result(s)");
+		} catch (Exception e) {
+			new ErrorDialog(parent, e);
+		} finally {
+			if (client != null) {
+				client.close();
+			}
+		}
 	}
 	
 	private void updateInfo() {

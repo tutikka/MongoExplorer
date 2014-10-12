@@ -16,8 +16,15 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 
+import com.mongodb.CommandResult;
+import com.mongodb.DBObject;
+import com.mongodb.MongoClient;
+import com.mongodb.util.JSON;
 import com.tt.mongoexplorer.domain.Collection;
+import com.tt.mongoexplorer.utils.MongoUtils;
+import com.tt.mongoexplorer.utils.UIUtils;
 
 @SuppressWarnings("serial")
 public class InsertObjectDialog extends JDialog implements ActionListener {
@@ -25,12 +32,6 @@ public class InsertObjectDialog extends JDialog implements ActionListener {
 	private static final int DIALOG_WIDTH = 640;
 	
 	private static final int DIALOG_HEIGHT = 480;
-
-	public static final int CANCEL_OPTION = 0;
-	
-	public static final int OK_OPTION = 1;
-	
-	private int option;
 	
 	private JTextArea content;
 	
@@ -43,7 +44,7 @@ public class InsertObjectDialog extends JDialog implements ActionListener {
 	public InsertObjectDialog(JFrame parent, Collection collection) {
 		super(parent);
 		this.collection = collection;
-		setTitle("Insert New Object");
+		setTitle("Insert Object");
 		
 		setSize(DIALOG_WIDTH, DIALOG_HEIGHT);
 		
@@ -76,11 +77,12 @@ public class InsertObjectDialog extends JDialog implements ActionListener {
 		JPanel panel = new JPanel();
 		panel.setLayout(new GridLayout(1, 1));
 		panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-		content = new JTextArea("{\n  \n}");
+		content = new JTextArea("{  }");
+		content.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		content.setBackground(Color.DARK_GRAY);
 		content.setForeground(Color.LIGHT_GRAY);
 		content.setCaretColor(Color.WHITE);
-		content.setCaretPosition(4);
+		content.setCaretPosition(2);
 		panel.add(content);
 		return (panel);
 	}
@@ -98,24 +100,38 @@ public class InsertObjectDialog extends JDialog implements ActionListener {
 		panel.add(ok);
 		return (panel);
 	}
-
-	public String getContent() {
-		return (content.getText());
-	}
-	
-	public int getOption() {
-		return (option);
-	}
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if ("cancel".equals(e.getActionCommand())) {
-			option = CANCEL_OPTION;
 			dispose();
 		}
 		if ("ok".equals(e.getActionCommand())) {
-			option = OK_OPTION;
-			dispose();
+			Runnable runnable = new Runnable() {
+				@Override
+				public void run() {
+					handleInsertObject();
+					dispose();
+				}
+			};
+			SwingUtilities.invokeLater(runnable);
+		}
+	}
+	
+	private void handleInsertObject() {
+		MongoClient client = null;
+		try {
+			client = MongoUtils.getMongoClient(collection.getDatabase().getHost());
+			client.getDB(collection.getDatabase().getName()).getCollection(collection.getName()).insert((DBObject) JSON.parse(content.getText()));
+			CommandResult result = client.fsync(false);
+			System.out.println(result);
+			UIUtils.info(this, "Object inserted");
+		} catch (Exception e) {
+			new ErrorDialog(this, e);
+		} finally {
+			if (client != null) {
+				client.close();
+			}
 		}
 	}
 	

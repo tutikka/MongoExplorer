@@ -29,9 +29,7 @@ import javax.swing.tree.TreeSelectionModel;
 import com.mongodb.BasicDBObject;
 import com.mongodb.CommandResult;
 import com.mongodb.DB;
-import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
-import com.mongodb.util.JSON;
 import com.tt.mongoexplorer.callback.ConnectCallback;
 import com.tt.mongoexplorer.callback.NavigationCallback;
 import com.tt.mongoexplorer.domain.Collection;
@@ -119,7 +117,7 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 	
 	@Override
 	public void onRequestConnect(final Host host) {
-		Runnable r = new Runnable() {
+		Runnable runnable = new Runnable() {
 			@Override
 			public void run() {
 				MongoClient client = null;
@@ -139,8 +137,9 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 					}
 					root.add(hostNode);
 					treeModel.nodeStructureChanged(root);
+					connections.getHosts().add(host);
 				} catch (Exception e) {
-					e.printStackTrace(System.err);
+					new ErrorDialog(parent, e);
 				} finally {
 					if (client != null) {
 						client.close();
@@ -148,7 +147,7 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 				}
 			}
 		};
-		SwingUtilities.invokeLater(r);
+		SwingUtilities.invokeLater(runnable);
 	}
 	
 	// *********
@@ -202,7 +201,7 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 	}
 	
 	private void createDatabase() {
-		Object object = JOptionPane.showInputDialog(parent, "Please enter the database name:", "Create database", JOptionPane.INFORMATION_MESSAGE, new ImageIcon("resources/large/database.png"), null, null);
+		Object object = JOptionPane.showInputDialog(parent, "Enter the database name:", "Create database", JOptionPane.INFORMATION_MESSAGE, new ImageIcon("resources/large/database.png"), null, null);
 		if (object != null) {
 			MongoClient client = null;
 			try {
@@ -217,7 +216,7 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 					tree.setSelectionPath(new TreePath(database.getPath()));
 				}
 			} catch (Exception e) {
-				e.printStackTrace(System.err);
+				new ErrorDialog(parent, e);
 			} finally {
 				if (client != null) {
 					client.close();
@@ -251,7 +250,7 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 	}
 	
 	private void createCollection() {
-		Object object = JOptionPane.showInputDialog(parent, "Please enter the collection name:", "Create collection", JOptionPane.INFORMATION_MESSAGE, new ImageIcon("resources/large/collection.png"), null, null);
+		Object object = JOptionPane.showInputDialog(parent, "Enter the collection name:", "Create collection", JOptionPane.INFORMATION_MESSAGE, new ImageIcon("resources/large/collection.png"), null, null);
 		if (object != null) {
 			MongoClient client = null;
 			try {
@@ -266,7 +265,7 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 					tree.setSelectionPath(new TreePath(collection.getPath()));
 				}
 			} catch (Exception e) {
-				e.printStackTrace(System.err);
+				new ErrorDialog(parent, e);
 			} finally {
 				if (client != null) {
 					client.close();
@@ -294,7 +293,7 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 					}
 				}
 			} catch (Exception e) {
-				e.printStackTrace(System.err);
+				new ErrorDialog(parent, e);
 			} finally {
 				if (client != null) {
 					client.close();
@@ -306,22 +305,14 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 	private JPopupMenu createMenuForCollection() {
 		JPopupMenu menu = new JPopupMenu();
 		menu.setInvoker(tree);
-		JMenuItem findAllObjects = new JMenuItem("Find all objects");
-		findAllObjects.addActionListener(new ActionListener() {
+		JMenuItem insertObject = new JMenuItem("Insert object...");
+		insertObject.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				findAllObjects();
+				insertObject();
 			}
 		});
-		menu.add(findAllObjects);
-		JMenuItem insertNewObject = new JMenuItem("Insert new object");
-		insertNewObject.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				insertNewObject();
-			}
-		});
-		menu.add(insertNewObject);
+		menu.add(insertObject);
 		JMenuItem deleteAllObjects = new JMenuItem("Delete all objects");
 		deleteAllObjects.addActionListener(new ActionListener() {
 			@Override
@@ -330,7 +321,13 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 			}
 		});
 		menu.add(deleteAllObjects);
-		JMenuItem exportCollection = new JMenuItem("Export collection");
+		JMenuItem exportCollection = new JMenuItem("Export collection...");
+		exportCollection.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				exportCollection();
+			}
+		});
 		menu.add(exportCollection);
 		JMenuItem dropCollection = new JMenuItem("Drop collection");
 		dropCollection.addActionListener(new ActionListener() {
@@ -345,29 +342,8 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 		return (menu);
 	}
 	
-	private void findAllObjects() {
-		for (NavigationCallback callback : callbacks) {
-			callback.onQueryRequested("");
-		}
-	}
-	
-	private void insertNewObject() {
-		InsertObjectDialog dialog = new InsertObjectDialog(parent, selectedCollection);
-		if (dialog.getOption() == InsertObjectDialog.OK_OPTION) {
-			MongoClient client = null;
-			try {
-				client = MongoUtils.getMongoClient(selectedHost);
-				client.getDB(selectedDatabase.getName()).getCollection(selectedCollection.getName()).insert((DBObject) JSON.parse(dialog.getContent()));
-				CommandResult result = client.fsync(false);
-				System.out.println(result);
-			} catch (Exception e) {
-				e.printStackTrace(System.err);
-			} finally {
-				if (client != null) {
-					client.close();
-				}
-			}
-		}
+	private void insertObject() {
+		new InsertObjectDialog(parent, selectedCollection);
 	}
 	
 	private void deleteAllObjects() {
@@ -380,13 +356,17 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 				CommandResult result = client.fsync(false);
 				System.out.println(result);
 			} catch (Exception e) {
-				e.printStackTrace(System.err);
+				new ErrorDialog(parent, e);
 			} finally {
 				if (client != null) {
 					client.close();
 				}
 			}
 		}
+	}
+	
+	private void exportCollection() {
+		new ExportCollectionDialog(parent, connections);
 	}
 	
 	private void dropCollection() {
@@ -408,7 +388,7 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 					}
 				}
 			} catch (Exception e) {
-				e.printStackTrace(System.err);
+				new ErrorDialog(parent, e);
 			} finally {
 				if (client != null) {
 					client.close();
