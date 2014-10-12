@@ -1,10 +1,11 @@
 package com.tt.mongoexplorer.domain;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Connections {
 
-	private List<Host> hosts;
+	private List<Host> hosts = new ArrayList<>();
 	
 	public Connections() {
 	}

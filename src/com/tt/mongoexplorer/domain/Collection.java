@@ -9,8 +9,9 @@ public class Collection {
 	public Collection(String name, Database database) {
 		this.name = name;
 		this.database = database;
+		this.database.getCollections().add(this);
 	}
-
+	
 	@Override
 	public String toString() {
 		return (name);

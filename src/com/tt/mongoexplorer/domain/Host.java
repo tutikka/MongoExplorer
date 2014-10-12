@@ -1,5 +1,8 @@
 package com.tt.mongoexplorer.domain;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Host {
 
 	private String address;
@@ -11,6 +14,8 @@ public class Host {
 	private String password;
 	
 	private String authenticationDatabase;
+	
+	private List<Database> databases = new ArrayList<>();
 	
 	public Host(String address, int port) {
 		this.address = address;
@@ -64,6 +69,14 @@ public class Host {
 
 	public void setAuthenticationDatabase(String authenticationDatabase) {
 		this.authenticationDatabase = authenticationDatabase;
+	}
+
+	public List<Database> getDatabases() {
+		return databases;
+	}
+
+	public void setDatabases(List<Database> databases) {
+		this.databases = databases;
 	}
 	
 }
