@@ -12,6 +12,4 @@ public interface NavigationCallback {
 	
 	public void onCollectionSelected(Collection collection);
 	
-	public void onQueryRequested(String query);
-	
 }
