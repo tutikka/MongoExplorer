@@ -171,6 +171,11 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 						callback.onFindAllDocumentsRequested(selectedCollection);
 					}
 				}
+				if (object instanceof Connections && e.getClickCount() == 2 && !e.isConsumed()) {
+					ConnectDialog connectDialog = new ConnectDialog(parent);
+					connectDialog.addConnectCallback(NavigationPanel.this);
+					connectDialog.setVisible(true);
+				}
 				if (SwingUtilities.isRightMouseButton(e)) {
 					if (object instanceof Host) {
 						createMenuForHost().show(tree, e.getX(), e.getY());
