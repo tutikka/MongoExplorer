@@ -6,23 +6,29 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
+import javax.swing.border.EtchedBorder;
 
+import com.tt.mongoexplorer.callback.NavigationCallback;
+import com.tt.mongoexplorer.domain.Collection;
 import com.tt.mongoexplorer.utils.Constants;
+import com.tt.mongoexplorer.utils.UIUtils;
 
 @SuppressWarnings("serial")
-public class MainFrame extends JFrame implements ActionListener {
+public class MainFrame extends JFrame implements ActionListener, NavigationCallback {
 
 	private NavigationPanel navigationPanel = new NavigationPanel(this);
 	
-	private QueryPanel queryPanel = new QueryPanel(this);
+	private JTabbedPane contentPanel = new JTabbedPane(JTabbedPane.TOP, JTabbedPane.SCROLL_TAB_LAYOUT);
 	
 	public MainFrame() {
 		setTitle(Constants.NAME + " - " + Constants.VERSION);
@@ -32,9 +38,11 @@ public class MainFrame extends JFrame implements ActionListener {
 		
 		setJMenuBar(createMenuBar());
 		
+		contentPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5), BorderFactory.createEtchedBorder(EtchedBorder.LOWERED)));
+		
 		JSplitPane jsp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 		jsp.setLeftComponent(navigationPanel);
-		jsp.setRightComponent(queryPanel);
+		jsp.setRightComponent(contentPanel);
 		jsp.setResizeWeight(0.2d);
 		
 		setLayout(new GridLayout(1, 1));
@@ -43,8 +51,7 @@ public class MainFrame extends JFrame implements ActionListener {
 		Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
 		setLocation(dimension.width / 2 - Constants.DEFAULT_WINDOW_WIDTH / 2, dimension.height / 2 - Constants.DEFAULT_WINDOW_HEIGHT / 2);
 		
-		// query panel listens for navigation callbacks
-		navigationPanel.addNavigationCallback(queryPanel);
+		navigationPanel.addNavigationCallback(this);
 		
 		setVisible(true);
 		
@@ -58,6 +65,43 @@ public class MainFrame extends JFrame implements ActionListener {
 			}
 		});
 	}
+	
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		if ("connect".equals(e.getActionCommand())) {
+			ConnectDialog connectDialog = new ConnectDialog(this);
+			connectDialog.addConnectCallback(navigationPanel);
+			connectDialog.setVisible(true);
+		}
+		if ("exit".equals(e.getActionCommand())) {
+			int result = JOptionPane.showConfirmDialog(this, "Are you sure?", "Exit", JOptionPane.YES_NO_OPTION);
+			if (result == JOptionPane.YES_OPTION) {
+				dispose();
+			}
+		}
+	}
+
+	@Override
+	public void onOpenQueryWindowRequested(Collection collection) {
+		QueryPanel queryPanel = new QueryPanel(this, collection);
+		queryPanel.setOpaque(false);
+		contentPanel.addTab(collection.toString(), UIUtils.icon("resources/small/collection.png"), queryPanel, createToolTip(collection));
+		contentPanel.setSelectedComponent(queryPanel);
+		queryPanel.openQueryWindow();
+	}
+
+	@Override
+	public void onFindAllDocumentsRequested(Collection collection) {
+		QueryPanel queryPanel = new QueryPanel(this, collection);
+		queryPanel.setOpaque(false);
+		contentPanel.addTab(collection.toString(), UIUtils.icon("resources/small/collection.png"), queryPanel, createToolTip(collection));
+		contentPanel.setSelectedComponent(queryPanel);
+		queryPanel.findAllDocuments();
+	}
+	
+	// *********
+	// private
+	// *********
 	
 	private JMenuBar createMenuBar() {
 		JMenuBar menuBar = new JMenuBar();
@@ -83,20 +127,13 @@ public class MainFrame extends JFrame implements ActionListener {
 		
 		return (menuBar);
 	}
-
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		if ("connect".equals(e.getActionCommand())) {
-			ConnectDialog connectDialog = new ConnectDialog(this);
-			connectDialog.addConnectCallback(navigationPanel);
-			connectDialog.setVisible(true);
-		}
-		if ("exit".equals(e.getActionCommand())) {
-			int result = JOptionPane.showConfirmDialog(this, "Are you sure?", "Exit", JOptionPane.YES_NO_OPTION);
-			if (result == JOptionPane.YES_OPTION) {
-				dispose();
-			}
-		}
+	
+	private String createToolTip(Collection collection) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(collection.getDatabase().getHost().toString());
+		sb.append(" / ");
+		sb.append(collection.getDatabase().toString());
+		return (sb.toString());
 	}
 	
 }

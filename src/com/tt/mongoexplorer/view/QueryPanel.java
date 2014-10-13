@@ -9,12 +9,15 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 import javax.swing.BorderFactory;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
@@ -23,27 +26,24 @@ import javax.swing.JTree;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.EtchedBorder;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreeSelectionModel;
 
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.util.JSON;
-import com.tt.mongoexplorer.callback.NavigationCallback;
 import com.tt.mongoexplorer.domain.Collection;
-import com.tt.mongoexplorer.domain.Database;
-import com.tt.mongoexplorer.domain.Host;
 import com.tt.mongoexplorer.utils.MongoUtils;
 import com.tt.mongoexplorer.utils.UIUtils;
 
 @SuppressWarnings("serial")
-public class QueryPanel extends JPanel implements ActionListener, NavigationCallback, TreeSelectionListener {
+public class QueryPanel extends JPanel implements ActionListener, TreeSelectionListener {
 
 	private MainFrame parent;
 	
@@ -69,35 +69,43 @@ public class QueryPanel extends JPanel implements ActionListener, NavigationCall
 	
 	private JLabel time;
 	
-	private Host selectedHost;
-	
-	private Database selectedDatabase;
-	
 	private Collection selectedCollection;
 	
-	public QueryPanel(MainFrame parent) {
+	public QueryPanel(MainFrame parent, Collection collection) {
 		this.parent = parent;
-	
-		setLayout(new BorderLayout());
+		this.selectedCollection = collection;
 		
-		setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5), BorderFactory.createEtchedBorder(EtchedBorder.LOWERED)));
+		setLayout(new BorderLayout());
 		
 		add(createQueryPanel(), BorderLayout.NORTH);
 		add(createResultsPanel(), BorderLayout.CENTER);
 		add(createInfoPanel(), BorderLayout.SOUTH);
+		
+		updateInfo();
+	}
+	
+	public void openQueryWindow() {
+		query.setText("{  }");
+		query.setCaretPosition(2);
+		query.requestFocus();
+	}
+	
+	public void findAllDocuments() {
+		query.setText("");
+		Runnable runnable = new Runnable() {
+			@Override
+			public void run() {
+				find.setEnabled(false);
+				handleQuery();
+				find.setEnabled(true);
+			}
+		};
+		SwingUtilities.invokeLater(runnable);
 	}
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if ("find".equals(e.getActionCommand())) {
-			if (selectedHost == null) {
-				UIUtils.error(this, "Please select the host");
-				return;
-			}
-			if (selectedDatabase == null) {
-				UIUtils.error(this, "Please select the database");
-				return;
-			}
 			if (selectedCollection == null) {
 				UIUtils.error(this, "Please select the collection");
 				return;
@@ -112,44 +120,6 @@ public class QueryPanel extends JPanel implements ActionListener, NavigationCall
 			};
 			SwingUtilities.invokeLater(runnable);
 		}
-	}
-
-	@Override
-	public void onHostSelected(Host host) {
-		this.selectedHost = host;
-		updateInfo();
-	}
-
-	@Override
-	public void onDatabaseSelected(Database database) {
-		if (database == null) {
-			this.selectedDatabase = null;
-		} else {
-			this.selectedHost = database.getHost();
-			this.selectedDatabase = database;
-		}
-		updateInfo();
-	}
-
-	@Override
-	public void onCollectionSelected(Collection collection) {
-		if (collection == null) {
-			this.selectedCollection = null;
-		} else {
-			this.selectedHost = collection.getDatabase().getHost();
-			this.selectedDatabase = collection.getDatabase();
-			this.selectedCollection = collection;
-			Runnable runnable = new Runnable() {
-				@Override
-				public void run() {
-					find.setEnabled(false);
-					handleQuery();
-					find.setEnabled(true);
-				}
-			};
-			SwingUtilities.invokeLater(runnable);
-		}
-		updateInfo();
 	}
 	
 	@Override
@@ -212,6 +182,22 @@ public class QueryPanel extends JPanel implements ActionListener, NavigationCall
 		tree.setRootVisible(false);
 		tree.setShowsRootHandles(true);
 		tree.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+		tree.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				DefaultMutableTreeNode dmtn = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+				if (dmtn == null) {
+					return;
+				}
+				Object object = dmtn.getUserObject();
+				if (object == null) {
+					return;
+				}
+				if (SwingUtilities.isRightMouseButton(e)) {
+					createMenuForDocument().show(tree, e.getX(), e.getY());
+				}
+			}
+		});
 		
 		area = new JTextArea();
 		
@@ -229,16 +215,73 @@ public class QueryPanel extends JPanel implements ActionListener, NavigationCall
 	private JPanel createInfoPanel() {
 		JPanel panel = new JPanel();
 		panel.setLayout(new GridLayout(1, 4));
-		host = new JLabel("[Not selected]", new ImageIcon("resources/small/host.png"), SwingConstants.LEFT);
+		host = new JLabel("[Not selected]", UIUtils.icon("resources/small/host.png"), SwingConstants.LEFT);
 		panel.add(host);
-		database = new JLabel("[Not selected]", new ImageIcon("resources/small/database.png"), SwingConstants.CENTER);
+		database = new JLabel("[Not selected]", UIUtils.icon("resources/small/database.png"), SwingConstants.CENTER);
 		panel.add(database);
-		collection = new JLabel("[Not selected]", new ImageIcon("resources/small/collection.png"), SwingConstants.CENTER);
+		collection = new JLabel("[Not selected]", UIUtils.icon("resources/small/collection.png"), SwingConstants.CENTER);
 		panel.add(collection);
-		time = new JLabel("[Not run]", new ImageIcon("resources/small/time.png"), SwingConstants.RIGHT);
+		time = new JLabel("[Not run]", UIUtils.icon("resources/small/time.png"), SwingConstants.RIGHT);
 		panel.add(time);
 		panel.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
 		return (panel);
+	}
+	
+	private JPopupMenu createMenuForDocument() {
+		JPopupMenu menu = new JPopupMenu();
+		menu.setInvoker(tree);
+		JMenuItem editDocument = new JMenuItem("Edit document...");
+		menu.add(editDocument);
+		JMenuItem deleteDocument = new JMenuItem("Delete document");
+		deleteDocument.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				deleteDocument();
+			}
+		});
+		menu.add(deleteDocument);
+		menu.setLightWeightPopupEnabled(true);
+		menu.setOpaque(true);
+		return (menu);
+	}
+	
+	private void deleteDocument() {
+		DefaultMutableTreeNode dmtn = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+		if (dmtn == null) {
+			return;
+		}
+		TreeNode[] path = dmtn.getPath();
+		if (path == null) {
+			return;
+		}
+		if (path.length > 0) {
+			DefaultMutableTreeNode root = (DefaultMutableTreeNode) path[1];
+			if (root == null) {
+				return;
+			}
+			CustomNode customNode = (CustomNode) root.getUserObject();
+			MongoClient client = null;
+			try {
+				client = MongoUtils.getMongoClient(selectedCollection.getDatabase().getHost());
+				client.getDB(selectedCollection.getDatabase().getName()).getCollection(selectedCollection.getName()).remove((DBObject) customNode.object);
+				client.fsync(false);
+				Runnable runnable = new Runnable() {
+					@Override
+					public void run() {
+						find.setEnabled(false);
+						handleQuery();
+						find.setEnabled(true);
+					}
+				};
+				SwingUtilities.invokeLater(runnable);
+			} catch (Exception e) {
+				new ErrorDialog(parent, e);
+			} finally {
+				if (client != null) {
+					client.close();
+				}
+			}
+		}
 	}
 	
 	private void walk(DBObject dbo, DefaultMutableTreeNode parent) {
@@ -262,14 +305,14 @@ public class QueryPanel extends JPanel implements ActionListener, NavigationCall
 		area.setText("");
 		MongoClient client = null;
 		try {
-			client = MongoUtils.getMongoClient(selectedHost);
+			client = MongoUtils.getMongoClient(selectedCollection.getDatabase().getHost());
 			long start = System.currentTimeMillis();
 			DBCursor cursor = null;
 			if (query.getText() != null && query.getText().length() > 0) {
 				DBObject ref = (DBObject) JSON.parse(query.getText());
-				cursor = client.getDB(selectedDatabase.getName()).getCollection(selectedCollection.getName()).find(ref);
+				cursor = client.getDB(selectedCollection.getDatabase().getName()).getCollection(selectedCollection.getName()).find(ref);
 			} else {
-				cursor = client.getDB(selectedDatabase.getName()).getCollection(selectedCollection.getName()).find();
+				cursor = client.getDB(selectedCollection.getDatabase().getName()).getCollection(selectedCollection.getName()).find();
 			}
 			long end = System.currentTimeMillis();
 			while (cursor.hasNext()) {
@@ -280,7 +323,7 @@ public class QueryPanel extends JPanel implements ActionListener, NavigationCall
 				walk(dbo, dmtn);
 				treeModel.nodeStructureChanged(root);
 			}
-			time.setText((end - start) + " ms | " + cursor.count() + " result(s)");
+			time.setText((end - start) + " ms | " + cursor.count() + " document(s)");
 		} catch (Exception e) {
 			new ErrorDialog(parent, e);
 		} finally {
@@ -291,21 +334,9 @@ public class QueryPanel extends JPanel implements ActionListener, NavigationCall
 	}
 	
 	private void updateInfo() {
-		if (selectedHost != null) {
-			host.setText(selectedHost.toString());
-		} else {
-			host.setText("[Not selected]");
-		}
-		if (selectedDatabase != null) {
-			database.setText(selectedDatabase.toString());
-		} else {
-			database.setText("[Not selected]");
-		}
-		if (selectedCollection != null) {
-			collection.setText(selectedCollection.toString());
-		} else {
-			collection.setText("[Not selected]");
-		}
+		host.setText(selectedCollection.getDatabase().getHost().toString());
+		database.setText(selectedCollection.getDatabase().toString());
+		collection.setText(selectedCollection.toString());
 	}
 	
 	private class CustomTreeCellRenderer extends DefaultTreeCellRenderer {
@@ -329,7 +360,7 @@ public class QueryPanel extends JPanel implements ActionListener, NavigationCall
 				setText("<html><font color='gray'>{ </font><font color='orange'>" + customNode.key + " </font><font color='gray'> }</font></html>");
 			} else {
 				setIcon(null);
-				setText("<html><font color='white'>" + customNode.key + "</font> <font color='yellow'>" + customNode.object.toString() + "</font> <font color='gray'>" + customNode.object.getClass().getName() + "</font></html>");
+				setText("<html><font color='white'>" + customNode.key + "</font> <font color='yellow'>" + customNode.object.toString() + "</font> <font color='gray'>" + customNode.object.getClass().getSimpleName() + "</font></html>");
 			}
 			
 			return (this);

@@ -9,7 +9,6 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 
 import javax.swing.BorderFactory;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
@@ -64,11 +63,8 @@ public class ExportCollectionDialog extends JDialog implements ActionListener, I
 	
 	private JButton ok;
 	
-	private Connections connections;
-	
 	public ExportCollectionDialog(JFrame parent, Connections connections) {
 		super(parent);
-		this.connections = connections;
 		setTitle("Export Collection");
 		
 		setSize(DIALOG_WIDTH, DIALOG_HEIGHT);
@@ -84,27 +80,98 @@ public class ExportCollectionDialog extends JDialog implements ActionListener, I
 		add(createContentPanel(), BorderLayout.CENTER);
 		add(createButtonsPanel(), BorderLayout.SOUTH);
 		
+		// add hosts
+		for (Host host : connections.getHosts()) {
+			srcHost.addItem(host);
+			tgtHost.addItem(host);
+		}
+		
 		setVisible(true);
 	}
 	
-	public JPanel createContentPanel() {
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		if ("cancel".equals(e.getActionCommand())) {
+			dispose();
+		}
+		if ("ok".equals(e.getActionCommand())) {
+			if (srcCollection.getSelectedItem() == null) {
+				UIUtils.error(this, "Please select the source collection");
+				return;
+			}
+			if (tgtCollection.getSelectedItem() == null) {
+				UIUtils.error(this, "Please select the target collection");
+				return;
+			}
+			Runnable runnable = new Runnable() {
+				@Override
+				public void run() {
+					boolean result = handleExportCollection((Collection) srcCollection.getSelectedItem(), (Collection) tgtCollection.getSelectedItem());
+					if (result) {
+						dispose();
+					}
+				}
+			};
+			SwingUtilities.invokeLater(runnable);
+		}
+	}
+
+	@Override
+	public void itemStateChanged(ItemEvent e) {
+		if (e.getSource() == srcHost) {
+			Host host = (Host) e.getItem();
+			srcDatabase.removeAllItems();
+			srcCollection.removeAllItems();
+			for (Database database : host.getDatabases()) {
+				srcDatabase.addItem(database);
+			}
+		}
+		if (e.getSource() == srcDatabase) {
+			Database database = (Database) e.getItem();
+			srcCollection.removeAllItems();
+			for (Collection collection : database.getCollections()) {
+				srcCollection.addItem(collection);
+			}
+		}
+		if (e.getSource() == tgtHost) {
+			Host host = (Host) e.getItem();
+			tgtDatabase.removeAllItems();
+			tgtCollection.removeAllItems();
+			for (Database database : host.getDatabases()) {
+				tgtDatabase.addItem(database);
+			}
+		}
+		if (e.getSource() == tgtDatabase) {
+			Database database = (Database) e.getItem();
+			tgtCollection.removeAllItems();
+			for (Collection collection : database.getCollections()) {
+				tgtCollection.addItem(collection);
+			}
+		}
+	}
+	
+	// *********
+	// private
+	// *********
+	
+	private JPanel createContentPanel() {
 		JPanel panel = new JPanel();
 		panel.setLayout(new GridLayout(1, 2));
 		panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		
 		JPanel source = new JPanel();
 		source.setBorder(BorderFactory.createTitledBorder("Source"));
-		srcHostLabel = new JLabel("Host:", new ImageIcon("resources/small/host.png"), SwingConstants.LEFT);
+		srcHostLabel = new JLabel("Host:", UIUtils.icon("resources/small/host.png"), SwingConstants.LEFT);
 		source.add(srcHostLabel);
 		srcHost = new JComboBox<>();
 		srcHost.addItemListener(this);
 		source.add(srcHost);
-		srcDatabaseLabel = new JLabel("Database:", new ImageIcon("resources/small/database.png"), SwingConstants.LEFT);
+		srcDatabaseLabel = new JLabel("Database:", UIUtils.icon("resources/small/database.png"), SwingConstants.LEFT);
 		source.add(srcDatabaseLabel);
 		srcDatabase = new JComboBox<>();
 		srcDatabase.addItemListener(this);
 		source.add(srcDatabase);
-		srcCollectionLabel = new JLabel("Collection:", new ImageIcon("resources/small/collection.png"), SwingConstants.LEFT);
+		srcCollectionLabel = new JLabel("Collection:", UIUtils.icon("resources/small/collection.png"), SwingConstants.LEFT);
 		source.add(srcCollectionLabel);
 		srcCollection = new JComboBox<>();
 		srcCollection.addItemListener(this);
@@ -126,17 +193,17 @@ public class ExportCollectionDialog extends JDialog implements ActionListener, I
 
 		JPanel target = new JPanel();
 		target.setBorder(BorderFactory.createTitledBorder("Target"));
-		tgtHostLabel = new JLabel("Host:", new ImageIcon("resources/small/host.png"), SwingConstants.LEFT);
+		tgtHostLabel = new JLabel("Host:", UIUtils.icon("resources/small/host.png"), SwingConstants.LEFT);
 		target.add(tgtHostLabel);
 		tgtHost = new JComboBox<>();
 		tgtHost.addItemListener(this);
 		target.add(tgtHost);
-		tgtDatabaseLabel = new JLabel("Database:", new ImageIcon("resources/small/database.png"), SwingConstants.LEFT);
+		tgtDatabaseLabel = new JLabel("Database:", UIUtils.icon("resources/small/database.png"), SwingConstants.LEFT);
 		target.add(tgtDatabaseLabel);
 		tgtDatabase = new JComboBox<>();
 		tgtDatabase.addItemListener(this);
 		target.add(tgtDatabase);
-		tgtCollectionLabel = new JLabel("Collection:", new ImageIcon("resources/small/collection.png"), SwingConstants.LEFT);
+		tgtCollectionLabel = new JLabel("Collection:", UIUtils.icon("resources/small/collection.png"), SwingConstants.LEFT);
 		target.add(tgtCollectionLabel);
 		tgtCollection = new JComboBox<>();
 		tgtCollection.addItemListener(this);
@@ -159,16 +226,10 @@ public class ExportCollectionDialog extends JDialog implements ActionListener, I
 		panel.add(source);
 		panel.add(target);
 		
-		// add hosts
-		for (Host host : connections.getHosts()) {
-			srcHost.addItem(host);
-			tgtHost.addItem(host);
-		}
-		
 		return (panel);
 	}
 	
-	public JPanel createButtonsPanel() {
+	private JPanel createButtonsPanel() {
 		JPanel panel = new JPanel();
 		panel.setLayout(new FlowLayout(FlowLayout.RIGHT));
 		cancel = new JButton("Cancel");
@@ -182,66 +243,7 @@ public class ExportCollectionDialog extends JDialog implements ActionListener, I
 		return (panel);
 	}
 	
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		if ("cancel".equals(e.getActionCommand())) {
-			dispose();
-		}
-		if ("ok".equals(e.getActionCommand())) {
-			if (srcCollection.getSelectedItem() == null) {
-				UIUtils.error(this, "Please select the source collection");
-				return;
-			}
-			if (tgtCollection.getSelectedItem() == null) {
-				UIUtils.error(this, "Please select the target collection");
-				return;
-			}
-			Runnable runnable = new Runnable() {
-				@Override
-				public void run() {
-					handleExportCollection((Collection) srcCollection.getSelectedItem(), (Collection) tgtCollection.getSelectedItem());
-					dispose();
-				}
-			};
-			SwingUtilities.invokeLater(runnable);
-		}
-	}
-
-	@Override
-	public void itemStateChanged(ItemEvent e) {
-		if (e.getSource() == srcHost) {
-			Host host = (Host) e.getItem();
-			srcDatabase.removeAllItems();
-			for (Database database : host.getDatabases()) {
-				srcDatabase.addItem(database);
-			}
-			srcCollection.removeAllItems();
-		}
-		if (e.getSource() == srcDatabase) {
-			Database database = (Database) e.getItem();
-			srcCollection.removeAllItems();
-			for (Collection collection : database.getCollections()) {
-				srcCollection.addItem(collection);
-			}
-		}
-		if (e.getSource() == tgtHost) {
-			Host host = (Host) e.getItem();
-			tgtDatabase.removeAllItems();
-			for (Database database : host.getDatabases()) {
-				tgtDatabase.addItem(database);
-			}
-			tgtCollection.removeAllItems();
-		}
-		if (e.getSource() == tgtDatabase) {
-			Database database = (Database) e.getItem();
-			tgtCollection.removeAllItems();
-			for (Collection collection : database.getCollections()) {
-				tgtCollection.addItem(collection);
-			}
-		}
-	}
-	
-	private void handleExportCollection(Collection source, Collection target) {
+	private boolean handleExportCollection(Collection source, Collection target) {
 		MongoClient sourceClient = null;
 		MongoClient targetClient = null;
 		try {
@@ -253,9 +255,11 @@ public class ExportCollectionDialog extends JDialog implements ActionListener, I
 				targetClient.getDB(target.getDatabase().getName()).getCollection(target.getName()).insert(cursor.next());
 				count++;
 			}
-			UIUtils.info(this, count + " object(s) exported");
+			UIUtils.info(this, count + " document(s) exported");
+			return (true);
 		} catch (Exception e) {
 			new ErrorDialog(this, e);
+			return (false);
 		} finally {
 			if (sourceClient != null) {
 				sourceClient.close();

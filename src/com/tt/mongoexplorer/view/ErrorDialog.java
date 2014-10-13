@@ -8,7 +8,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
@@ -17,6 +16,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
+
+import com.tt.mongoexplorer.utils.UIUtils;
 
 @SuppressWarnings("serial")
 public class ErrorDialog extends JDialog implements ActionListener {
@@ -80,15 +81,19 @@ public class ErrorDialog extends JDialog implements ActionListener {
 		}
 	}
 
-	public JPanel createLabelPanel() {
+	// *********
+	// private
+	// *********
+	
+	private JPanel createLabelPanel() {
 		JPanel panel = new JPanel();
 		panel.setLayout(new GridLayout(1, 1));
-		panel.add(new JLabel("Looks like something unexpected happened. You might find the reason below.", new ImageIcon("resources/large/oops.png"), SwingConstants.LEFT));
+		panel.add(new JLabel("Looks like something unexpected happened. You might find the reason below.", UIUtils.icon("resources/large/oops.png"), SwingConstants.LEFT));
 		panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		return (panel);
 	}
 	
-	public JPanel createContentPanel() {
+	private JPanel createContentPanel() {
 		JPanel panel = new JPanel();
 		panel.setLayout(new GridLayout(1, 1));
 		
@@ -119,7 +124,7 @@ public class ErrorDialog extends JDialog implements ActionListener {
 		return (panel);
 	}
 	
-	public JPanel createButtonsPanel() {
+	private JPanel createButtonsPanel() {
 		JPanel panel = new JPanel();
 		panel.setLayout(new FlowLayout(FlowLayout.RIGHT));
 		close = new JButton("Close");

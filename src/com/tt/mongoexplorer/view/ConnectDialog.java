@@ -29,6 +29,8 @@ public class ConnectDialog extends JDialog implements ActionListener {
 	
 	private static final int DIALOG_HEIGHT = 480;
 	
+	private JTextField description;
+	
 	private JTextField ip;
 	
 	private JTextField port;
@@ -56,7 +58,7 @@ public class ConnectDialog extends JDialog implements ActionListener {
 		setLayout(new BorderLayout());
 		
 		JTabbedPane jtp = new JTabbedPane();
-		jtp.setBorder(new EmptyBorder(15, 0, 0, 0));
+		jtp.setBorder(new EmptyBorder(15, 5, 0, 5));
 		jtp.addTab("Host Info", createHostInfoPanel());
 		jtp.addTab("Authentication", createAuthenticationPanel());
 		
@@ -72,9 +74,49 @@ public class ConnectDialog extends JDialog implements ActionListener {
 		callbacks.remove(callback);
 	}
 	
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		if ("cancel".equals(e.getActionCommand())) {
+			dispose();
+		}
+		if ("ok".equals(e.getActionCommand())) {
+			
+			// validate port
+			try {
+				int i = Integer.parseInt(port.getText());
+				if (i < 0 || i > 65535) {
+					JOptionPane.showMessageDialog(this, "The port number must be in the range [0-65535]", "Error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+			} catch (NumberFormatException nfe) {
+				JOptionPane.showMessageDialog(this, "The port number must be in the range [0-65535]", "Error", JOptionPane.ERROR_MESSAGE);
+				return;
+			}
+			
+			Host host = new Host(description.getText(), ip.getText(), Integer.parseInt(port.getText()));
+			host.setUsername(username.getText());
+			host.setPassword(password.getPassword().toString());
+			host.setAuthenticationDatabase(authenticationDatabase.getText());
+			for (ConnectCallback callback : callbacks) {
+				callback.onRequestConnect(host);
+			}
+			dispose();
+		}
+	}
+	
+	// *********
+	// private
+	// *********
+	
 	private JPanel createHostInfoPanel() {
 		JPanel panel = new JPanel();
 		panel.setOpaque(false);
+		
+		JLabel descriptionLabel = new JLabel("Description");
+		panel.add(descriptionLabel);
+		
+		description = new JTextField("Local", 24);
+		panel.add(description);
 		
 		JLabel ipLabel = new JLabel("Hostname or IP address");
 		panel.add(ipLabel);
@@ -90,11 +132,17 @@ public class ConnectDialog extends JDialog implements ActionListener {
 		
 		SpringLayout sl = new SpringLayout();
 		
+		sl.putConstraint(SpringLayout.WEST, descriptionLabel, 10, SpringLayout.WEST, panel);
+		sl.putConstraint(SpringLayout.NORTH, descriptionLabel, 10, SpringLayout.NORTH, panel);
+		
+		sl.putConstraint(SpringLayout.EAST, description, -10, SpringLayout.EAST, panel);
+		sl.putConstraint(SpringLayout.NORTH, description, 10, SpringLayout.NORTH, panel);
+		
 		sl.putConstraint(SpringLayout.WEST, ipLabel, 10, SpringLayout.WEST, panel);
-		sl.putConstraint(SpringLayout.NORTH, ipLabel, 10, SpringLayout.NORTH, panel);
+		sl.putConstraint(SpringLayout.NORTH, ipLabel, 10, SpringLayout.SOUTH, description);
 		
 		sl.putConstraint(SpringLayout.EAST, ip, -10, SpringLayout.EAST, panel);
-		sl.putConstraint(SpringLayout.NORTH, ip, 10, SpringLayout.NORTH, panel);
+		sl.putConstraint(SpringLayout.NORTH, ip, 10, SpringLayout.SOUTH, description);
 		
 		sl.putConstraint(SpringLayout.WEST, portLabel, 10, SpringLayout.WEST, panel);
 		sl.putConstraint(SpringLayout.NORTH, portLabel, 10, SpringLayout.SOUTH, ip);
@@ -166,36 +214,6 @@ public class ConnectDialog extends JDialog implements ActionListener {
 		ok.addActionListener(this);
 		panel.add(ok);
 		return (panel);
-	}
-
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		if ("cancel".equals(e.getActionCommand())) {
-			dispose();
-		}
-		if ("ok".equals(e.getActionCommand())) {
-			
-			// validate port
-			try {
-				int i = Integer.parseInt(port.getText());
-				if (i < 0 || i > 65535) {
-					JOptionPane.showMessageDialog(this, "The port number must be in the range [0-65535]", "Error", JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-			} catch (NumberFormatException nfe) {
-				JOptionPane.showMessageDialog(this, "The port number must be in the range [0-65535]", "Error", JOptionPane.ERROR_MESSAGE);
-				return;
-			}
-			
-			Host host = new Host(ip.getText(), Integer.parseInt(port.getText()));
-			host.setUsername(username.getText());
-			host.setPassword(password.getPassword().toString());
-			host.setAuthenticationDatabase(authenticationDatabase.getText());
-			for (ConnectCallback callback : callbacks) {
-				callback.onRequestConnect(host);
-			}
-			dispose();
-		}
 	}
 	
 }

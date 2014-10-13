@@ -10,7 +10,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
-import javax.swing.ImageIcon;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -37,6 +36,7 @@ import com.tt.mongoexplorer.domain.Connections;
 import com.tt.mongoexplorer.domain.Database;
 import com.tt.mongoexplorer.domain.Host;
 import com.tt.mongoexplorer.utils.MongoUtils;
+import com.tt.mongoexplorer.utils.UIUtils;
 
 @SuppressWarnings("serial")
 public class NavigationPanel extends JPanel implements ConnectCallback, TreeSelectionListener {
@@ -94,24 +94,15 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 		}
 		if (object instanceof Host) {
 			selectedHost = (Host) object;
-			for (NavigationCallback callback : callbacks) {
-				callback.onHostSelected((Host) object);
-			}
 		}
 		if (object instanceof Database) {
 			selectedDatabase = (Database) object;
 			selectedHost = selectedDatabase.getHost();
-			for (NavigationCallback callback : callbacks) {
-				callback.onDatabaseSelected((Database) object);
-			}
 		}
 		if (object instanceof Collection) {
 			selectedCollection = (Collection) object;
 			selectedDatabase = selectedCollection.getDatabase();
 			selectedHost = selectedDatabase.getHost();
-			for (NavigationCallback callback : callbacks) {
-				callback.onCollectionSelected((Collection) object);
-			}
 		}
 	}
 	
@@ -166,9 +157,21 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 		tree.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent e) {
+				DefaultMutableTreeNode dmtn = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+				if (dmtn == null) {
+					return;
+				}
+				Object object = dmtn.getUserObject();
+				if (object == null) {
+					return;
+				}
+				if (object instanceof Collection && e.getClickCount() == 2 && !e.isConsumed()) {
+					e.consume();
+					for (NavigationCallback callback : callbacks) {
+						callback.onFindAllDocumentsRequested(selectedCollection);
+					}
+				}
 				if (SwingUtilities.isRightMouseButton(e)) {
-					DefaultMutableTreeNode dmtn = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
-					Object object = dmtn.getUserObject();
 					if (object instanceof Host) {
 						createMenuForHost().show(tree, e.getX(), e.getY());
 					}
@@ -201,7 +204,7 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 	}
 	
 	private void createDatabase() {
-		Object object = JOptionPane.showInputDialog(parent, "Enter the database name:", "Create database", JOptionPane.INFORMATION_MESSAGE, new ImageIcon("resources/large/database.png"), null, null);
+		Object object = JOptionPane.showInputDialog(parent, "Enter the database name:", "Create database", JOptionPane.INFORMATION_MESSAGE, UIUtils.icon("resources/large/database.png"), null, null);
 		if (object != null) {
 			MongoClient client = null;
 			try {
@@ -250,7 +253,7 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 	}
 	
 	private void createCollection() {
-		Object object = JOptionPane.showInputDialog(parent, "Enter the collection name:", "Create collection", JOptionPane.INFORMATION_MESSAGE, new ImageIcon("resources/large/collection.png"), null, null);
+		Object object = JOptionPane.showInputDialog(parent, "Enter the collection name:", "Create collection", JOptionPane.INFORMATION_MESSAGE, UIUtils.icon("resources/large/collection.png"), null, null);
 		if (object != null) {
 			MongoClient client = null;
 			try {
@@ -275,7 +278,7 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 	}
 	
 	private void dropDatabase() {
-		int option = JOptionPane.showConfirmDialog(parent, "Are you sure you want to drop the database?", "Drop database", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, new ImageIcon("resources/large/database.png"));
+		int option = JOptionPane.showConfirmDialog(parent, "Are you sure you want to drop the database?", "Drop database", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, UIUtils.icon("resources/large/database.png"));
 		if (option == JOptionPane.YES_OPTION) {
 			MongoClient client = null;
 			try {
@@ -288,9 +291,6 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 				if (dmtn.getUserObject() instanceof Database) {
 					treeModel.removeNodeFromParent(dmtn);
 					tree.setSelectionPath(new TreePath(parent.getPath()));
-					for (NavigationCallback callback : callbacks) {
-						callback.onDatabaseSelected(null);
-					}
 				}
 			} catch (Exception e) {
 				new ErrorDialog(parent, e);
@@ -305,22 +305,38 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 	private JPopupMenu createMenuForCollection() {
 		JPopupMenu menu = new JPopupMenu();
 		menu.setInvoker(tree);
-		JMenuItem insertObject = new JMenuItem("Insert object...");
-		insertObject.addActionListener(new ActionListener() {
+		JMenuItem findAllDocuments = new JMenuItem("Find all documents");
+		findAllDocuments.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				insertObject();
+				findAllDocuments();
 			}
 		});
-		menu.add(insertObject);
-		JMenuItem deleteAllObjects = new JMenuItem("Delete all objects");
-		deleteAllObjects.addActionListener(new ActionListener() {
+		menu.add(findAllDocuments);
+		JMenuItem openQueryWindow = new JMenuItem("Open query window");
+		openQueryWindow.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				deleteAllObjects();
+				openQueryWindow();
 			}
 		});
-		menu.add(deleteAllObjects);
+		menu.add(openQueryWindow);
+		JMenuItem insertDocument = new JMenuItem("Insert document...");
+		insertDocument.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				insertDocument();
+			}
+		});
+		menu.add(insertDocument);
+		JMenuItem deleteAllDocuments = new JMenuItem("Delete all documents");
+		deleteAllDocuments.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				deleteAllDocuments();
+			}
+		});
+		menu.add(deleteAllDocuments);
 		JMenuItem exportCollection = new JMenuItem("Export collection...");
 		exportCollection.addActionListener(new ActionListener() {
 			@Override
@@ -342,12 +358,24 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 		return (menu);
 	}
 	
-	private void insertObject() {
-		new InsertObjectDialog(parent, selectedCollection);
+	private void openQueryWindow() {
+		for (NavigationCallback callback : callbacks) {
+			callback.onOpenQueryWindowRequested(selectedCollection);
+		}
 	}
 	
-	private void deleteAllObjects() {
-		int option = JOptionPane.showConfirmDialog(parent, "Are you sure you want to delete all objects from the collection?", "Delete all objects", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, new ImageIcon("resources/large/collection.png"));
+	private void findAllDocuments() {
+		for (NavigationCallback callback : callbacks) {
+			callback.onFindAllDocumentsRequested(selectedCollection);
+		}
+	}
+	
+	private void insertDocument() {
+		new InsertDocumentDialog(parent, selectedCollection);
+	}
+	
+	private void deleteAllDocuments() {
+		int option = JOptionPane.showConfirmDialog(parent, "Are you sure you want to delete all documents from the collection?", "Delete all objects", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, UIUtils.icon("resources/large/collection.png"));
 		if (option == JOptionPane.YES_OPTION) {
 			MongoClient client = null;
 			try {
@@ -370,7 +398,7 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 	}
 	
 	private void dropCollection() {
-		int option = JOptionPane.showConfirmDialog(parent, "Are you sure you want to drop the collection?", "Drop collection", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, new ImageIcon("resources/large/collection.png"));
+		int option = JOptionPane.showConfirmDialog(parent, "Are you sure you want to drop the collection?", "Drop collection", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, UIUtils.icon("resources/large/collection.png"));
 		if (option == JOptionPane.YES_OPTION) {
 			MongoClient client = null;
 			try {
@@ -383,9 +411,6 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 				if (dmtn.getUserObject() instanceof Collection) {
 					treeModel.removeNodeFromParent(dmtn);
 					tree.setSelectionPath(new TreePath(parent.getPath()));
-					for (NavigationCallback callback : callbacks) {
-						callback.onCollectionSelected(null);
-					}
 				}
 			} catch (Exception e) {
 				new ErrorDialog(parent, e);
@@ -408,25 +433,25 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 			Object userObject = dmtn.getUserObject();
 			
 			if (userObject instanceof Connections) {
-				setIcon(new ImageIcon("resources/small/connections.png"));
+				setIcon(UIUtils.icon("resources/small/connections.png"));
 				setText("Connections");
 			}
 			
 			if (userObject instanceof Host) {
 				Host host = (Host) userObject;
-				setIcon(new ImageIcon("resources/small/host.png"));
+				setIcon(UIUtils.icon("resources/small/host.png"));
 				setText(host.toString());
 			}
 			
 			if (userObject instanceof Database) {
 				Database database = (Database) userObject;
-				setIcon(new ImageIcon("resources/small/database.png"));
+				setIcon(UIUtils.icon("resources/small/database.png"));
 				setText(database.toString());
 			}
 			
 			if (userObject instanceof Collection) {
 				Collection collection = (Collection) userObject;
-				setIcon(new ImageIcon("resources/small/collection.png"));
+				setIcon(UIUtils.icon("resources/small/collection.png"));
 				setText(collection.toString());
 			}
 
