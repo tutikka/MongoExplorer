@@ -8,7 +8,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
@@ -18,7 +17,6 @@ import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
-import com.mongodb.CommandResult;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.util.JSON;
@@ -27,7 +25,7 @@ import com.tt.mongoexplorer.utils.MongoUtils;
 import com.tt.mongoexplorer.utils.UIUtils;
 
 @SuppressWarnings("serial")
-public class InsertObjectDialog extends JDialog implements ActionListener {
+public class InsertDocumentDialog extends JDialog implements ActionListener {
 
 	private static final int DIALOG_WIDTH = 640;
 	
@@ -41,10 +39,10 @@ public class InsertObjectDialog extends JDialog implements ActionListener {
 	
 	private Collection collection;
 	
-	public InsertObjectDialog(JFrame parent, Collection collection) {
+	public InsertDocumentDialog(JFrame parent, Collection collection) {
 		super(parent);
 		this.collection = collection;
-		setTitle("Insert Object");
+		setTitle("Insert Document");
 		
 		setSize(DIALOG_WIDTH, DIALOG_HEIGHT);
 		
@@ -63,17 +61,40 @@ public class InsertObjectDialog extends JDialog implements ActionListener {
 		setVisible(true);
 	}
 	
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		if ("cancel".equals(e.getActionCommand())) {
+			dispose();
+		}
+		if ("ok".equals(e.getActionCommand())) {
+			Runnable runnable = new Runnable() {
+				@Override
+				public void run() {
+					boolean result = handleInsertObject();
+					if (result) {
+						dispose();
+					}
+				}
+			};
+			SwingUtilities.invokeLater(runnable);
+		}
+	}
+	
+	// *********
+	// private
+	// *********
+	
 	private JPanel createInfoPanel() {
 		JPanel panel = new JPanel();
 		panel.setLayout(new GridLayout(1, 3));
-		panel.add(new JLabel(collection.getDatabase().getHost().toString(), new ImageIcon("resources/small/host.png"), SwingConstants.LEFT));
-		panel.add(new JLabel(collection.getDatabase().toString(), new ImageIcon("resources/small/database.png"), SwingConstants.CENTER));
-		panel.add(new JLabel(collection.toString(), new ImageIcon("resources/small/collection.png"), SwingConstants.RIGHT));
+		panel.add(new JLabel(collection.getDatabase().getHost().toString(), UIUtils.icon("resources/small/host.png"), SwingConstants.LEFT));
+		panel.add(new JLabel(collection.getDatabase().toString(), UIUtils.icon("resources/small/database.png"), SwingConstants.CENTER));
+		panel.add(new JLabel(collection.toString(), UIUtils.icon("resources/small/collection.png"), SwingConstants.RIGHT));
 		panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));
 		return (panel);
 	}
 	
-	public JPanel createContentPanel() {
+	private JPanel createContentPanel() {
 		JPanel panel = new JPanel();
 		panel.setLayout(new GridLayout(1, 1));
 		panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -87,7 +108,7 @@ public class InsertObjectDialog extends JDialog implements ActionListener {
 		return (panel);
 	}
 	
-	public JPanel createButtonsPanel() {
+	private JPanel createButtonsPanel() {
 		JPanel panel = new JPanel();
 		panel.setLayout(new FlowLayout(FlowLayout.RIGHT));
 		cancel = new JButton("Cancel");
@@ -101,33 +122,16 @@ public class InsertObjectDialog extends JDialog implements ActionListener {
 		return (panel);
 	}
 	
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		if ("cancel".equals(e.getActionCommand())) {
-			dispose();
-		}
-		if ("ok".equals(e.getActionCommand())) {
-			Runnable runnable = new Runnable() {
-				@Override
-				public void run() {
-					handleInsertObject();
-					dispose();
-				}
-			};
-			SwingUtilities.invokeLater(runnable);
-		}
-	}
-	
-	private void handleInsertObject() {
+	private boolean handleInsertObject() {
 		MongoClient client = null;
 		try {
 			client = MongoUtils.getMongoClient(collection.getDatabase().getHost());
 			client.getDB(collection.getDatabase().getName()).getCollection(collection.getName()).insert((DBObject) JSON.parse(content.getText()));
-			CommandResult result = client.fsync(false);
-			System.out.println(result);
-			UIUtils.info(this, "Object inserted");
+			client.fsync(false);
+			return (true);
 		} catch (Exception e) {
 			new ErrorDialog(this, e);
+			return (false);
 		} finally {
 			if (client != null) {
 				client.close();
