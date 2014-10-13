@@ -13,10 +13,11 @@ Make sure you have git, java and ant available, and set up in your path.
 3. In the created dist directory, run one of the startup scripts
 
 Example (MacOS, Unix, Linux)
-``
+
+```
 git clone https://github.com/tutikka/MongoExplorer.git
 cd MongoExplorer
 ant build.xml
 cd dist
 sh ./mongo-explorer.sh &
-``
+```
