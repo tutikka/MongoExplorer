@@ -3,6 +3,8 @@ MongoExplorer
 
 Cross-platform database management tool for MongoDB
 
+![ScreenShot](/screenshots/ss_1.png)
+
 Building from Source
 --------------------
 
