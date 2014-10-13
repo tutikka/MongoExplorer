@@ -5,6 +5,8 @@ import java.util.List;
 
 public class Host {
 
+	private String description;
+	
 	private String address;
 	
 	private int port = -1;
@@ -17,7 +19,8 @@ public class Host {
 	
 	private List<Database> databases = new ArrayList<>();
 	
-	public Host(String address, int port) {
+	public Host(String description, String address, int port) {
+		this.description = description;
 		this.address = address;
 		this.port = port;
 	}
@@ -25,10 +28,21 @@ public class Host {
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
+		sb.append(description);
+		sb.append(" [ ");
 		sb.append(address);
 		sb.append(":");
 		sb.append(port);
+		sb.append(" ]");
 		return (sb.toString());
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
 	}
 
 	public String getAddress() {
