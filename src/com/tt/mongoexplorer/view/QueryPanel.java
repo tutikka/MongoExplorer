@@ -200,6 +200,7 @@ public class QueryPanel extends JPanel implements ActionListener, TreeSelectionL
 		});
 		
 		area = new JTextArea();
+		area.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		
 		JScrollPane jspTree = new JScrollPane(tree);
 		jspTree.setBackground(Color.DARK_GRAY);
