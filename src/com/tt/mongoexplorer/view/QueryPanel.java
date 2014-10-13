@@ -232,6 +232,12 @@ public class QueryPanel extends JPanel implements ActionListener, TreeSelectionL
 		JPopupMenu menu = new JPopupMenu();
 		menu.setInvoker(tree);
 		JMenuItem editDocument = new JMenuItem("Edit document...");
+		editDocument.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				editDocument();
+			}
+		});
 		menu.add(editDocument);
 		JMenuItem deleteDocument = new JMenuItem("Delete document");
 		deleteDocument.addActionListener(new ActionListener() {
@@ -244,6 +250,25 @@ public class QueryPanel extends JPanel implements ActionListener, TreeSelectionL
 		menu.setLightWeightPopupEnabled(true);
 		menu.setOpaque(true);
 		return (menu);
+	}
+	
+	private void editDocument() {
+		DefaultMutableTreeNode dmtn = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+		if (dmtn == null) {
+			return;
+		}
+		TreeNode[] path = dmtn.getPath();
+		if (path == null) {
+			return;
+		}
+		if (path.length > 0) {
+			DefaultMutableTreeNode root = (DefaultMutableTreeNode) path[1];
+			if (root == null) {
+				return;
+			}
+			CustomNode customNode = (CustomNode) root.getUserObject();
+			new EditDocumentDialog(parent, selectedCollection, (DBObject) customNode.object);
+		}
 	}
 	
 	private void deleteDocument() {
