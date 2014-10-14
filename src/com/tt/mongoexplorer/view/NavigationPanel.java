@@ -419,7 +419,7 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 	}
 	
 	private void exportCollection() {
-		new ExportCollectionDialog(parent, connections);
+		new ExportCollectionDialog(parent, connections, selectedCollection);
 	}
 	
 	private void dropCollection() {

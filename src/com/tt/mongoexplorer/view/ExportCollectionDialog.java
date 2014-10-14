@@ -63,7 +63,7 @@ public class ExportCollectionDialog extends JDialog implements ActionListener, I
 	
 	private JButton ok;
 	
-	public ExportCollectionDialog(JFrame parent, Connections connections) {
+	public ExportCollectionDialog(JFrame parent, Connections connections, Collection collection) {
 		super(parent);
 		setTitle("Export Collection");
 		
@@ -85,6 +85,11 @@ public class ExportCollectionDialog extends JDialog implements ActionListener, I
 			srcHost.addItem(host);
 			tgtHost.addItem(host);
 		}
+		
+		// set selected host, database, and collection
+		srcHost.setSelectedItem(collection.getDatabase().getHost());
+		srcDatabase.setSelectedItem(collection.getDatabase());
+		srcCollection.setSelectedItem(collection);
 		
 		setVisible(true);
 	}
