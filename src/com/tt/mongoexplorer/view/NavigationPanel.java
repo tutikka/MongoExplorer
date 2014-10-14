@@ -172,6 +172,9 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 					}
 				}
 				if (SwingUtilities.isRightMouseButton(e)) {
+					if (object instanceof Connections) {
+						createMenuForConnections().show(tree, e.getX(), e.getY());
+					}
 					if (object instanceof Host) {
 						createMenuForHost().show(tree, e.getX(), e.getY());
 					}
@@ -185,6 +188,28 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 			}
 		});
 		return (tree);
+	}
+	
+	private JPopupMenu createMenuForConnections() {
+		JPopupMenu menu = new JPopupMenu();
+		menu.setInvoker(tree);
+		JMenuItem connectToHost = new JMenuItem("Connect to host...");
+		connectToHost.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				connectToHost();
+			}
+		});
+		menu.add(connectToHost);
+		menu.setLightWeightPopupEnabled(true);
+		menu.setOpaque(true);
+		return (menu);
+	}
+	
+	private void connectToHost() {
+		ConnectDialog connectDialog = new ConnectDialog(parent);
+		connectDialog.addConnectCallback(this);
+		connectDialog.setVisible(true);
 	}
 	
 	private JPopupMenu createMenuForHost() {
