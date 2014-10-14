@@ -49,6 +49,10 @@ public class QueryPanel extends JPanel implements ActionListener, TreeSelectionL
 	
 	private JTextField query;
 	
+	private JTextField start;
+	
+	private JTextField end;
+	
 	private JButton find;
 	
 	private JTree tree;
@@ -153,14 +157,31 @@ public class QueryPanel extends JPanel implements ActionListener, TreeSelectionL
 		c.weightx = 0.0;
 		panel.add(new JLabel("Query:"), c);
 		c.fill = GridBagConstraints.HORIZONTAL;
-		c.insets = new Insets(0, 10, 0, 0);
+		c.insets = new Insets(0, 5, 0, 0);
 		c.gridx = 1;
 		c.gridy = 0;
 		c.weightx = 1.0;
 		query = new JTextField("");
 		panel.add(query, c);
-		c.insets = new Insets(0, 10, 0, 0);
-		c.gridx = 2;
+		c.insets = new Insets(0, 5, 0, 0);
+		c.gridx = 3;
+		c.gridy = 0;
+		c.weightx = 0.0;
+		start = new JTextField("0", 4);
+		panel.add(start, c);
+		c.insets = new Insets(0, 5, 0, 0);
+		c.gridx = 4;
+		c.gridy = 0;
+		c.weightx = 0.0;
+		panel.add(new JLabel("-"), c);
+		c.insets = new Insets(0, 5, 0, 0);
+		c.gridx = 5;
+		c.gridy = 0;
+		c.weightx = 0.0;
+		end = new JTextField("99", 4);
+		panel.add(end, c);
+		c.insets = new Insets(0, 5, 0, 0);
+		c.gridx = 6;
 		c.gridy = 0;
 		c.weightx = 0.0;
 		find = new JButton("Find");
@@ -329,21 +350,50 @@ public class QueryPanel extends JPanel implements ActionListener, TreeSelectionL
 	}
 	
 	private void handleQuery() {
+		// parse start range
+		int start = 0;
+		try {
+			start = Integer.parseInt(this.start.getText());
+			if (start < 0) {
+				UIUtils.error(this, "Start range must be > 0");
+				return;
+			}
+		} catch (Exception e) {
+			UIUtils.error(this, "Unable to parse start range");
+			return;
+		}
+		// parse end range
+		int end = 99;
+		try {
+			end = Integer.parseInt(this.end.getText());
+			if (end < 0) {
+				UIUtils.error(this, "End range must be > 0");
+				return;
+			}
+			if (end < start) {
+				UIUtils.error(this, "End range must be >= start range");
+				return;
+			}
+		} catch (Exception e) {
+			UIUtils.error(this, "Unable to parse end range");
+			return;
+		}
 		root.removeAllChildren();
 		treeModel.nodeStructureChanged(root);
 		area.setText("");
 		MongoClient client = null;
 		try {
 			client = MongoUtils.getMongoClient(selectedCollection.getDatabase().getHost());
-			long start = System.currentTimeMillis();
+			long s = System.currentTimeMillis();
 			DBCursor cursor = null;
 			if (query.getText() != null && query.getText().length() > 0) {
 				DBObject ref = (DBObject) JSON.parse(query.getText());
-				cursor = client.getDB(selectedCollection.getDatabase().getName()).getCollection(selectedCollection.getName()).find(ref);
+				cursor = client.getDB(selectedCollection.getDatabase().getName()).getCollection(selectedCollection.getName()).find(ref).skip(start).limit(end - start + 1);
 			} else {
-				cursor = client.getDB(selectedCollection.getDatabase().getName()).getCollection(selectedCollection.getName()).find();
+				cursor = client.getDB(selectedCollection.getDatabase().getName()).getCollection(selectedCollection.getName()).find().skip(start).limit(end - start + 1);
 			}
-			long end = System.currentTimeMillis();
+			long e = System.currentTimeMillis();
+			int count = 0;
 			while (cursor.hasNext()) {
 				DBObject dbo = cursor.next();
 				String key = dbo.get("_id") == null ? "" : dbo.get("_id").toString();
@@ -351,8 +401,9 @@ public class QueryPanel extends JPanel implements ActionListener, TreeSelectionL
 				root.add(dmtn);
 				walk(dbo, dmtn);
 				treeModel.nodeStructureChanged(root);
+				count++;
 			}
-			time.setText((end - start) + " ms | " + cursor.count() + " document(s)");
+			time.setText((e - s) + " ms | " + count + "/" + cursor.count() + " document(s)");
 		} catch (Exception e) {
 			new ErrorDialog(parent, e);
 		} finally {
