@@ -5,10 +5,26 @@ import java.io.File;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 public class UIUtils {
 
+	public static void about(JFrame parent) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("<html><b><font color='black'>");
+		sb.append(Constants.NAME);
+		sb.append("</font></b><p>");
+		sb.append("<html><font color='gray'>Version ");
+		sb.append(Constants.VERSION);
+		sb.append("</font><p>");
+		sb.append("<html><font color='gray'>Released ");
+		sb.append(Constants.RELEASED);
+		sb.append("</font>");
+		sb.append("</html>");
+		JOptionPane.showMessageDialog(parent, sb.toString(), "About", JOptionPane.INFORMATION_MESSAGE);
+	}
+	
 	public static void info(Component parent, String message) {
 		JOptionPane.showMessageDialog(parent, message, "Heads Up!", JOptionPane.INFORMATION_MESSAGE, UIUtils.icon("resources/large/info.png"));
 	}

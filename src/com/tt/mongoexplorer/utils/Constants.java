@@ -6,6 +6,8 @@ public class Constants {
 	
 	public static final String VERSION = "0.1.0";
 
+	public static final String RELEASED = "14.10.2014";
+	
 	public static final int DEFAULT_WINDOW_WIDTH = 1024;
 	
 	public static final int DEFAULT_WINDOW_HEIGHT = 768;

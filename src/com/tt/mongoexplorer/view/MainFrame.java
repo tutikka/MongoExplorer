@@ -79,6 +79,9 @@ public class MainFrame extends JFrame implements ActionListener, NavigationCallb
 				dispose();
 			}
 		}
+		if ("about".equals(e.getActionCommand())) {
+			UIUtils.about(this);
+		}
 	}
 
 	@Override
