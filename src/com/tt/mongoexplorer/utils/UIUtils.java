@@ -10,6 +10,11 @@ import javax.swing.JOptionPane;
 
 public class UIUtils {
 
+	public static boolean isMac() {
+		String os = System.getProperty("os.name");
+		return (os != null && os.contains("mac"));
+	}
+	
 	public static void about(JFrame parent) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("<html><b><font color='black'>");

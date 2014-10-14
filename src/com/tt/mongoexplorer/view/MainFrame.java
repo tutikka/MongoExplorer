@@ -38,7 +38,11 @@ public class MainFrame extends JFrame implements ActionListener, NavigationCallb
 		
 		setJMenuBar(createMenuBar());
 		
-		contentPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5), BorderFactory.createEtchedBorder(EtchedBorder.LOWERED)));
+		if (UIUtils.isMac()) {
+			contentPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5), BorderFactory.createEtchedBorder(EtchedBorder.LOWERED)));
+		} else {
+			contentPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));			
+		}
 		
 		JSplitPane jsp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 		jsp.setLeftComponent(navigationPanel);
