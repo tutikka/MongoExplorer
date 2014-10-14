@@ -13,6 +13,7 @@ import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
@@ -109,7 +110,9 @@ public class EditDocumentDialog extends JDialog implements ActionListener {
 		content.setForeground(Color.LIGHT_GRAY);
 		content.setCaretColor(Color.WHITE);
 		content.setCaretPosition(0);
-		panel.add(content);
+		JScrollPane jsp = new JScrollPane(content);
+		jsp.setBackground(Color.DARK_GRAY);
+		panel.add(jsp);
 		return (panel);
 	}
 	
