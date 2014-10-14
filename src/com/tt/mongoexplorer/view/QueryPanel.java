@@ -145,6 +145,7 @@ public class QueryPanel extends JPanel implements ActionListener, TreeSelectionL
 	
 	private JPanel createQueryPanel() {
 		JPanel panel = new JPanel();
+		panel.setOpaque(false);
 		panel.setLayout(new GridBagLayout());
 		GridBagConstraints c = new GridBagConstraints();
 		c.gridx = 0;
@@ -207,6 +208,7 @@ public class QueryPanel extends JPanel implements ActionListener, TreeSelectionL
 		JScrollPane jspArea = new JScrollPane(area);
 		
 		JSplitPane jsp = new JSplitPane(JSplitPane.VERTICAL_SPLIT, jspTree, jspArea);
+		jsp.setOpaque(false);
 		jsp.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		jsp.setResizeWeight(0.9d);
 
@@ -215,6 +217,7 @@ public class QueryPanel extends JPanel implements ActionListener, TreeSelectionL
 	
 	private JPanel createInfoPanel() {
 		JPanel panel = new JPanel();
+		panel.setOpaque(false);
 		panel.setLayout(new GridLayout(1, 4));
 		host = new JLabel("[Not selected]", UIUtils.icon("resources/small/host.png"), SwingConstants.LEFT);
 		panel.add(host);
