@@ -73,7 +73,9 @@ public class EditDocumentDialog extends JDialog implements ActionListener {
 			Runnable runnable = new Runnable() {
 				@Override
 				public void run() {
+					save.setEnabled(false);
 					boolean result = handleEditObject();
+					save.setEnabled(true);
 					if (result) {
 						dispose();
 					}

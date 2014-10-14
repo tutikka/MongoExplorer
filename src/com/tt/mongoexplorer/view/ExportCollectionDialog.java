@@ -106,8 +106,11 @@ public class ExportCollectionDialog extends JDialog implements ActionListener, I
 			Runnable runnable = new Runnable() {
 				@Override
 				public void run() {
-					boolean result = handleExportCollection((Collection) srcCollection.getSelectedItem(), (Collection) tgtCollection.getSelectedItem());
-					if (result) {
+					ok.setEnabled(false);
+					int result = handleExportCollection((Collection) srcCollection.getSelectedItem(), (Collection) tgtCollection.getSelectedItem());
+					ok.setEnabled(true);
+					if (result != -1) {
+						UIUtils.info(ExportCollectionDialog.this, result + " document(s) exported");
 						dispose();
 					}
 				}
@@ -243,7 +246,7 @@ public class ExportCollectionDialog extends JDialog implements ActionListener, I
 		return (panel);
 	}
 	
-	private boolean handleExportCollection(Collection source, Collection target) {
+	private int handleExportCollection(Collection source, Collection target) {
 		MongoClient sourceClient = null;
 		MongoClient targetClient = null;
 		try {
@@ -255,11 +258,10 @@ public class ExportCollectionDialog extends JDialog implements ActionListener, I
 				targetClient.getDB(target.getDatabase().getName()).getCollection(target.getName()).insert(cursor.next());
 				count++;
 			}
-			UIUtils.info(this, count + " document(s) exported");
-			return (true);
+			return (count);
 		} catch (Exception e) {
 			new ErrorDialog(this, e);
-			return (false);
+			return (-1);
 		} finally {
 			if (sourceClient != null) {
 				sourceClient.close();

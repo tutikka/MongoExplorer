@@ -70,7 +70,9 @@ public class InsertDocumentDialog extends JDialog implements ActionListener {
 			Runnable runnable = new Runnable() {
 				@Override
 				public void run() {
+					ok.setEnabled(false);
 					boolean result = handleInsertObject();
+					ok.setEnabled(true);
 					if (result) {
 						dispose();
 					}
