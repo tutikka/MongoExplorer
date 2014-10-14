@@ -12,7 +12,7 @@ public class UIUtils {
 
 	public static boolean isMac() {
 		String os = System.getProperty("os.name");
-		return (os != null && os.contains("mac"));
+		return (os != null && os.toLowerCase().contains("mac"));
 	}
 	
 	public static void about(JFrame parent) {
