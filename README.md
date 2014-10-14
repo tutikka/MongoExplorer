@@ -1,9 +1,15 @@
 MongoExplorer
 =============
 
-Cross-platform database management tool for MongoDB
+Cross-platform database management tool for MongoDB.
 
 ![ScreenShot](/screenshots/ss_1.png)
+
+Requirements
+------------
+
+- Java runtime environment 1.7 or later
+- 5 MB of disk space
 
 Building from Source
 --------------------
@@ -17,9 +23,9 @@ Make sure you have git, java and ant available, and set up in your path.
 Example (MacOS, Unix, Linux)
 
 ```
-git clone https://github.com/tutikka/MongoExplorer.git
-cd MongoExplorer
-ant build.xml
-cd dist
-sh ./mongo-explorer.sh &
+$ git clone https://github.com/tutikka/MongoExplorer.git
+$ cd MongoExplorer
+$ ant
+$ cd dist
+$ sh ./mongo-explorer.sh &
 ```
