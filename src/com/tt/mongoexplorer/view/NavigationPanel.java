@@ -121,9 +121,11 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 						hostNode.add(databaseNode);
 						DB db = client.getDB(databaseName);
 						for (String collectionName : db.getCollectionNames()) {
-							Collection collection = new Collection(collectionName, database);
-							DefaultMutableTreeNode collectionNode = new DefaultMutableTreeNode(collection);
-							databaseNode.add(collectionNode);
+							if (!"system.indexes".equals(collectionName)) {
+								Collection collection = new Collection(collectionName, database);
+								DefaultMutableTreeNode collectionNode = new DefaultMutableTreeNode(collection);
+								databaseNode.add(collectionNode);
+							}
 						}
 					}
 					root.add(hostNode);
