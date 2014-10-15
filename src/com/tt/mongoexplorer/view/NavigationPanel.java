@@ -28,13 +28,16 @@ import javax.swing.tree.TreeSelectionModel;
 import com.mongodb.BasicDBObject;
 import com.mongodb.CommandResult;
 import com.mongodb.DB;
+import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
+import com.mongodb.util.JSON;
 import com.tt.mongoexplorer.callback.ConnectCallback;
 import com.tt.mongoexplorer.callback.NavigationCallback;
 import com.tt.mongoexplorer.domain.Collection;
 import com.tt.mongoexplorer.domain.Connections;
 import com.tt.mongoexplorer.domain.Database;
 import com.tt.mongoexplorer.domain.Host;
+import com.tt.mongoexplorer.domain.Index;
 import com.tt.mongoexplorer.utils.MongoUtils;
 import com.tt.mongoexplorer.utils.UIUtils;
 
@@ -60,6 +63,8 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 	private Database selectedDatabase;
 	
 	private Collection selectedCollection;
+	
+	private Index selectedIndex;
 	
 	public NavigationPanel(MainFrame parent) {
 		this.parent = parent;
@@ -104,6 +109,12 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 			selectedDatabase = selectedCollection.getDatabase();
 			selectedHost = selectedDatabase.getHost();
 		}
+		if (object instanceof Index) {
+			selectedIndex = (Index) object;
+			selectedCollection = selectedIndex.getCollection();
+			selectedDatabase = selectedCollection.getDatabase();
+			selectedHost = selectedDatabase.getHost();
+		}
 	}
 	
 	@Override
@@ -125,6 +136,11 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 								Collection collection = new Collection(collectionName, database);
 								DefaultMutableTreeNode collectionNode = new DefaultMutableTreeNode(collection);
 								databaseNode.add(collectionNode);
+								for (DBObject object : db.getCollection(collectionName).getIndexInfo()) {
+									Index index = new Index(object, collection);
+									DefaultMutableTreeNode indexNode = new DefaultMutableTreeNode(index);
+									collectionNode.add(indexNode);
+								}
 							}
 						}
 					}
@@ -185,6 +201,9 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 					}
 					if (object instanceof Collection) {
 						createMenuForCollection().show(tree, e.getX(), e.getY());
+					}
+					if (object instanceof Index) {
+						createMenuForIndex().show(tree, e.getX(), e.getY());
 					}
 				}
 			}
@@ -380,6 +399,14 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 			}
 		});
 		menu.add(dropCollection);
+		JMenuItem createIndex = new JMenuItem("Create index...");
+		createIndex.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				createIndex();
+			}
+		});
+		menu.add(createIndex);
 		menu.setLightWeightPopupEnabled(true);
 		menu.setOpaque(true);
 		return (menu);
@@ -449,6 +476,73 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 		}
 	}
 	
+	private void createIndex() {
+		CreateIndexDialog dialog = new CreateIndexDialog(parent, selectedCollection);
+		String result = dialog.getResult();
+		if (result != null) {
+			MongoClient client = null;
+			try {
+				client = MongoUtils.getMongoClient(selectedHost);
+				DBObject object = (DBObject) JSON.parse(result);
+				client.getDB(selectedDatabase.getName()).getCollection(selectedCollection.getName()).createIndex(object);
+				client.fsync(false);
+				DefaultMutableTreeNode dmtn = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+				if (dmtn.getUserObject() instanceof Collection) {
+					DefaultMutableTreeNode index = new DefaultMutableTreeNode(new Index(object, selectedCollection));
+					treeModel.insertNodeInto(index, dmtn, dmtn.getChildCount());
+					tree.setSelectionPath(new TreePath(index.getPath()));
+				}
+			} catch (Exception e) {
+				new ErrorDialog(parent, e);
+			} finally {
+				if (client != null) {
+					client.close();
+				}
+			}
+		}
+	}
+	
+	private JPopupMenu createMenuForIndex() {
+		JPopupMenu menu = new JPopupMenu();
+		menu.setInvoker(tree);
+		JMenuItem dropIndex = new JMenuItem("Drop index");
+		dropIndex.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				dropIndex();
+			}
+		});
+		menu.add(dropIndex);
+		menu.setLightWeightPopupEnabled(true);
+		menu.setOpaque(true);
+		return (menu);
+	}
+	
+	private void dropIndex() {
+		int option = JOptionPane.showConfirmDialog(parent, "Are you sure you want to drop the index?", "Drop index", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, UIUtils.icon("resources/large/index.png"));
+		if (option == JOptionPane.YES_OPTION) {
+			MongoClient client = null;
+			try {
+				client = MongoUtils.getMongoClient(selectedHost);
+				client.getDB(selectedDatabase.getName()).getCollection(selectedCollection.getName()).dropIndex((String) selectedIndex.getObject().get("name"));
+				CommandResult result = client.fsync(false);
+				System.out.println(result);
+				DefaultMutableTreeNode dmtn = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+				DefaultMutableTreeNode parent = (DefaultMutableTreeNode) dmtn.getParent();
+				if (dmtn.getUserObject() instanceof Index) {
+					treeModel.removeNodeFromParent(dmtn);
+					tree.setSelectionPath(new TreePath(parent.getPath()));
+				}
+			} catch (Exception e) {
+				new ErrorDialog(parent, e);
+			} finally {
+				if (client != null) {
+					client.close();
+				}
+			}
+		}
+	}
+	
 	private class CustomTreeCellRenderer extends DefaultTreeCellRenderer {
 
 		@Override
@@ -480,6 +574,12 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 				Collection collection = (Collection) userObject;
 				setIcon(UIUtils.icon("resources/small/collection.png"));
 				setText(collection.toString());
+			}
+			
+			if (userObject instanceof Index) {
+				Index index = (Index) userObject;
+				setIcon(UIUtils.icon("resources/small/index.png"));
+				setText(index.getObject().get("key") == null ? index.getObject().toString() : index.getObject().get("key").toString());
 			}
 
 			return (this);

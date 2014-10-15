@@ -1,10 +1,15 @@
 package com.tt.mongoexplorer.domain;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Collection {
 
 	private String name;
 	
 	private Database database;
+	
+	private List<Index> indexes = new ArrayList<>();
 	
 	public Collection(String name, Database database) {
 		this.name = name;
@@ -31,6 +36,14 @@ public class Collection {
 
 	public void setDatabase(Database database) {
 		this.database = database;
+	}
+
+	public List<Index> getIndexes() {
+		return indexes;
+	}
+
+	public void setIndexes(List<Index> indexes) {
+		this.indexes = indexes;
 	}
 	
 }
