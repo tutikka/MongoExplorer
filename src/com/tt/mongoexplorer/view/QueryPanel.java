@@ -138,7 +138,11 @@ public class QueryPanel extends JPanel implements ActionListener, TreeSelectionL
 		}
 		if (object instanceof CustomNode) {
 			CustomNode customNode = (CustomNode) object;
-			area.setText(customNode.object.toString());
+			if (customNode.object instanceof DBObject) {
+				area.setText(UIUtils.prettyPrint((DBObject) customNode.object));
+			} else {
+				area.setText(customNode.object.toString());
+			}
 			area.setCaretPosition(0);
 		}
 	}

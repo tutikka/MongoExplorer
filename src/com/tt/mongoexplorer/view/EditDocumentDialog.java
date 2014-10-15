@@ -104,7 +104,7 @@ public class EditDocumentDialog extends JDialog implements ActionListener {
 		JPanel panel = new JPanel();
 		panel.setLayout(new GridLayout(1, 1));
 		panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-		content = new JTextArea(object.toString());
+		content = new JTextArea(UIUtils.prettyPrint(object));
 		content.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		content.setBackground(Color.DARK_GRAY);
 		content.setForeground(Color.LIGHT_GRAY);

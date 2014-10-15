@@ -8,8 +8,28 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.mongodb.DBObject;
+
 public class UIUtils {
 
+	public static String prettyPrint(DBObject object) {
+		if (object == null) {
+			return ("");
+		}
+		try {
+			Gson gson = new GsonBuilder().setPrettyPrinting().create();
+			JsonParser parser = new JsonParser();
+			JsonElement element = parser.parse(object.toString());
+			return (gson.toJson(element));
+		} catch (Exception e) {
+			return (object.toString());
+		}
+	}
+	
 	public static boolean isMac() {
 		String os = System.getProperty("os.name");
 		return (os != null && os.toLowerCase().contains("mac"));
