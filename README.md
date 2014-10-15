@@ -8,13 +8,13 @@ Cross-platform database management tool for MongoDB.
 Requirements
 ------------
 
-- Java runtime environment 1.7 or later
+- Java runtime environment 7 or later
 - 5 MB of disk space
 
 Building from Source
 --------------------
 
-Make sure you have git, java and ant available, and set up in your path.
+Make sure you have ``git``, ``java`` and ``ant`` available, and set up in your path.
 
 1. Clone the repository
 2. In the project base directory, run the Ant build script
