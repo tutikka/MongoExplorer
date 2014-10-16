@@ -1,19 +1,25 @@
 package com.tt.mongoexplorer.view;
 
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 import javax.swing.border.EtchedBorder;
@@ -92,7 +98,9 @@ public class MainFrame extends JFrame implements ActionListener, NavigationCallb
 	public void onOpenQueryWindowRequested(Collection collection) {
 		QueryPanel queryPanel = new QueryPanel(this, collection);
 		queryPanel.setOpaque(false);
-		contentPanel.addTab(collection.toString(), UIUtils.icon("resources/small/collection.png"), queryPanel, createToolTip(collection));
+		contentPanel.add(queryPanel);
+		contentPanel.setToolTipTextAt(contentPanel.indexOfComponent(queryPanel), createToolTip(collection));
+		contentPanel.setTabComponentAt(contentPanel.indexOfComponent(queryPanel), createTabTitlePanel(collection.getName(), queryPanel));
 		contentPanel.setSelectedComponent(queryPanel);
 		queryPanel.openQueryWindow();
 	}
@@ -101,7 +109,9 @@ public class MainFrame extends JFrame implements ActionListener, NavigationCallb
 	public void onFindAllDocumentsRequested(Collection collection) {
 		QueryPanel queryPanel = new QueryPanel(this, collection);
 		queryPanel.setOpaque(false);
-		contentPanel.addTab(collection.toString(), UIUtils.icon("resources/small/collection.png"), queryPanel, createToolTip(collection));
+		contentPanel.add(queryPanel);
+		contentPanel.setToolTipTextAt(contentPanel.indexOfComponent(queryPanel), createToolTip(collection));
+		contentPanel.setTabComponentAt(contentPanel.indexOfComponent(queryPanel), createTabTitlePanel(collection.getName(), queryPanel));
 		contentPanel.setSelectedComponent(queryPanel);
 		queryPanel.findAllDocuments();
 	}
@@ -109,6 +119,23 @@ public class MainFrame extends JFrame implements ActionListener, NavigationCallb
 	// *********
 	// private
 	// *********
+	
+	private JPanel createTabTitlePanel(String title, final JPanel content) {
+		JPanel panel = new JPanel();
+		panel.setOpaque(false);
+		panel.setLayout(new FlowLayout(FlowLayout.LEFT));
+		JLabel titleLabel = new JLabel(title, UIUtils.icon("resources/small/collection.png"), SwingConstants.LEFT);
+		panel.add(titleLabel);
+		JLabel closeLabel = new JLabel(UIUtils.icon("resources/special/x.png"));
+		closeLabel.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				contentPanel.remove(content);
+			}
+		});
+		panel.add(closeLabel);
+		return (panel);
+	}
 	
 	private JMenuBar createMenuBar() {
 		JMenuBar menuBar = new JMenuBar();
