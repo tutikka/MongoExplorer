@@ -1,8 +1,10 @@
 package com.tt.mongoexplorer.view;
 
 import java.awt.Dimension;
-import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.Insets;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -123,9 +125,17 @@ public class MainFrame extends JFrame implements ActionListener, NavigationCallb
 	private JPanel createTabTitlePanel(String title, final JPanel content) {
 		JPanel panel = new JPanel();
 		panel.setOpaque(false);
-		panel.setLayout(new FlowLayout(FlowLayout.LEFT));
+		panel.setLayout(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		c.gridx = 0;
+		c.gridy = 0;
+		c.weightx = 0.0;
 		JLabel titleLabel = new JLabel(title, UIUtils.icon("resources/small/collection.png"), SwingConstants.LEFT);
-		panel.add(titleLabel);
+		panel.add(titleLabel, c);
+		c.gridx = 1;
+		c.gridy = 0;
+		c.weightx = 0.0;
+		c.insets = new Insets(0, 5, 0, 0);
 		JLabel closeLabel = new JLabel(UIUtils.icon("resources/special/x.png"));
 		closeLabel.addMouseListener(new MouseAdapter() {
 			@Override
@@ -133,7 +143,7 @@ public class MainFrame extends JFrame implements ActionListener, NavigationCallb
 				contentPanel.remove(content);
 			}
 		});
-		panel.add(closeLabel);
+		panel.add(closeLabel, c);
 		return (panel);
 	}
 	
