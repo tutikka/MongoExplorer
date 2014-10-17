@@ -1,6 +1,7 @@
 package com.tt.mongoexplorer.view;
 
 import java.awt.Dimension;
+import java.awt.DisplayMode;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.Toolkit;
@@ -58,8 +59,15 @@ public class MainFrame extends JFrame implements ActionListener, NavigationCallb
 		setLayout(new GridLayout(1, 1));
 		add(jsp);
 		
-		Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
-		setLocation(dimension.width / 2 - Constants.DEFAULT_WINDOW_WIDTH / 2, dimension.height / 2 - Constants.DEFAULT_WINDOW_HEIGHT / 2);
+		// try to place window in the center of the screen
+		try {
+			DisplayMode displayMode = getGraphicsConfiguration().getDevice().getDisplayMode();
+			setLocation(displayMode.getWidth() / 2 - Constants.DEFAULT_WINDOW_WIDTH / 2, displayMode.getHeight() / 2 - Constants.DEFAULT_WINDOW_HEIGHT / 2);
+		} catch (Exception e) {
+			Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
+			setLocation(dimension.width / 2 - Constants.DEFAULT_WINDOW_WIDTH / 2, dimension.height / 2 - Constants.DEFAULT_WINDOW_HEIGHT / 2);			
+		}
+		
 		
 		navigationPanel.addNavigationCallback(this);
 		
