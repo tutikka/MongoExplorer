@@ -138,12 +138,13 @@ public class MainFrame extends JFrame implements ActionListener, NavigationCallb
 		c.gridx = 0;
 		c.gridy = 0;
 		c.weightx = 0.0;
+		c.insets = new Insets(0, 5, 0, 0);
 		JLabel titleLabel = new JLabel(title, UIUtils.icon("resources/small/collection.png"), SwingConstants.LEFT);
 		panel.add(titleLabel, c);
 		c.gridx = 1;
 		c.gridy = 0;
 		c.weightx = 0.0;
-		c.insets = new Insets(0, 5, 0, 0);
+		c.insets = new Insets(0, 5, 0, 5);
 		JLabel closeLabel = new JLabel(UIUtils.icon("resources/special/x.png"));
 		closeLabel.addMouseListener(new MouseAdapter() {
 			@Override
