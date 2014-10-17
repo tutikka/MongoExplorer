@@ -16,6 +16,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
@@ -300,39 +301,42 @@ public class QueryPanel extends JPanel implements ActionListener, TreeSelectionL
 	}
 	
 	private void deleteDocument() {
-		DefaultMutableTreeNode dmtn = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
-		if (dmtn == null) {
-			return;
-		}
-		TreeNode[] path = dmtn.getPath();
-		if (path == null) {
-			return;
-		}
-		if (path.length > 0) {
-			DefaultMutableTreeNode root = (DefaultMutableTreeNode) path[1];
-			if (root == null) {
+		int option = JOptionPane.showConfirmDialog(parent, "Are you sure you want to delete the document?", "Delete document", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, UIUtils.icon("resources/large/document.png"));
+		if (option == JOptionPane.YES_OPTION) {
+			DefaultMutableTreeNode dmtn = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+			if (dmtn == null) {
 				return;
 			}
-			CustomNode customNode = (CustomNode) root.getUserObject();
-			MongoClient client = null;
-			try {
-				client = MongoUtils.getMongoClient(selectedCollection.getDatabase().getHost());
-				client.getDB(selectedCollection.getDatabase().getName()).getCollection(selectedCollection.getName()).remove((DBObject) customNode.object);
-				client.fsync(false);
-				Runnable runnable = new Runnable() {
-					@Override
-					public void run() {
-						find.setEnabled(false);
-						handleQuery();
-						find.setEnabled(true);
+			TreeNode[] path = dmtn.getPath();
+			if (path == null) {
+				return;
+			}
+			if (path.length > 0) {
+				DefaultMutableTreeNode root = (DefaultMutableTreeNode) path[1];
+				if (root == null) {
+					return;
+				}
+				CustomNode customNode = (CustomNode) root.getUserObject();
+				MongoClient client = null;
+				try {
+					client = MongoUtils.getMongoClient(selectedCollection.getDatabase().getHost());
+					client.getDB(selectedCollection.getDatabase().getName()).getCollection(selectedCollection.getName()).remove((DBObject) customNode.object);
+					client.fsync(false);
+					Runnable runnable = new Runnable() {
+						@Override
+						public void run() {
+							find.setEnabled(false);
+							handleQuery();
+							find.setEnabled(true);
+						}
+					};
+					SwingUtilities.invokeLater(runnable);
+				} catch (Exception e) {
+					new ErrorDialog(parent, e);
+				} finally {
+					if (client != null) {
+						client.close();
 					}
-				};
-				SwingUtilities.invokeLater(runnable);
-			} catch (Exception e) {
-				new ErrorDialog(parent, e);
-			} finally {
-				if (client != null) {
-					client.close();
 				}
 			}
 		}
