@@ -447,7 +447,6 @@ public class QueryPanel extends JPanel implements ActionListener, TreeSelectionL
 			if (customNode.object instanceof DBObject) {
 				setText("<html><font color='gray'>{ </font><font color='orange'>" + customNode.key + " </font><font color='gray'> }</font></html>");
 			} else {
-				setIcon(null);
 				setText("<html><font color='white'>" + customNode.key + "</font> <font color='yellow'>" + customNode.object.toString() + "</font> <font color='gray'>" + customNode.object.getClass().getSimpleName() + "</font></html>");
 			}
 			

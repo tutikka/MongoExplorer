@@ -293,6 +293,15 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 			}
 		});
 		menu.add(dropDatabase);
+		menu.addSeparator();
+		JMenuItem viewDatabaseStats = new JMenuItem("View statistics...");
+		viewDatabaseStats.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				viewDatabaseStats();
+			}
+		});
+		menu.add(viewDatabaseStats);
 		menu.setLightWeightPopupEnabled(true);
 		menu.setOpaque(true);
 		return (menu);
@@ -346,6 +355,10 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 				}
 			}
 		}
+	}
+	
+	private void viewDatabaseStats() {
+		new StatsDialog(parent, selectedDatabase);
 	}
 	
 	private JPopupMenu createMenuForCollection() {
@@ -407,6 +420,15 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 			}
 		});
 		menu.add(createIndex);
+		menu.addSeparator();
+		JMenuItem viewCollectionStats = new JMenuItem("View statistics...");
+		viewCollectionStats.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				viewCollectionStats();
+			}
+		});
+		menu.add(viewCollectionStats);
 		menu.setLightWeightPopupEnabled(true);
 		menu.setOpaque(true);
 		return (menu);
@@ -500,6 +522,10 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 				}
 			}
 		}
+	}
+	
+	private void viewCollectionStats() {
+		new StatsDialog(parent, selectedCollection);
 	}
 	
 	private JPopupMenu createMenuForIndex() {
