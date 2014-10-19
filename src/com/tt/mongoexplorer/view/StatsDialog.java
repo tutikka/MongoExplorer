@@ -17,6 +17,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
@@ -47,6 +48,8 @@ public class StatsDialog extends JDialog implements ActionListener {
 	
 	private JButton close;
 	
+	private JButton refresh;
+	
 	private Object source;
 	
 	public StatsDialog(JFrame parent, Object source) {
@@ -68,13 +71,32 @@ public class StatsDialog extends JDialog implements ActionListener {
 		add(createStatsPanel(), BorderLayout.CENTER);
 		add(createButtonsPanel(), BorderLayout.SOUTH);
 		
-		handleStats();
+		Runnable runnable = new Runnable() {
+			@Override
+			public void run() {
+				refresh.setEnabled(false);
+				handleStats();
+				refresh.setEnabled(true);
+			}
+		};
+		SwingUtilities.invokeLater(runnable);
 		
 		setVisible(true);
 	}
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
+		if ("refresh".equals(e.getActionCommand())) {
+			Runnable runnable = new Runnable() {
+				@Override
+				public void run() {
+					refresh.setEnabled(false);
+					handleStats();
+					refresh.setEnabled(true);
+				}
+			};
+			SwingUtilities.invokeLater(runnable);
+		}
 		if ("close".equals(e.getActionCommand())) {
 			dispose();
 		}
@@ -93,17 +115,20 @@ public class StatsDialog extends JDialog implements ActionListener {
 			Database database = (Database) source;
 			hostLabel = database.getHost().toString();
 			databaseLabel = database.toString();
+			panel.setLayout(new GridLayout(1, 2));
+			panel.add(new JLabel(hostLabel, UIUtils.icon("resources/small/host.png"), SwingConstants.LEFT));
+			panel.add(new JLabel(databaseLabel, UIUtils.icon("resources/small/database.png"), SwingConstants.RIGHT));
 		}
 		if (source instanceof Collection) {
 			Collection collection = (Collection) source;
 			hostLabel = collection.getDatabase().getHost().toString();
 			databaseLabel = collection.getDatabase().toString();
 			collectionLabel = collection.toString();
+			panel.setLayout(new GridLayout(1, 3));
+			panel.add(new JLabel(hostLabel, UIUtils.icon("resources/small/host.png"), SwingConstants.LEFT));
+			panel.add(new JLabel(databaseLabel, UIUtils.icon("resources/small/database.png"), SwingConstants.CENTER));
+			panel.add(new JLabel(collectionLabel, UIUtils.icon("resources/small/collection.png"), SwingConstants.RIGHT));
 		}
-		panel.setLayout(new GridLayout(1, 3));
-		panel.add(new JLabel(hostLabel, UIUtils.icon("resources/small/host.png"), SwingConstants.LEFT));
-		panel.add(new JLabel(databaseLabel, UIUtils.icon("resources/small/database.png"), SwingConstants.CENTER));
-		panel.add(new JLabel(collectionLabel, UIUtils.icon("resources/small/collection.png"), SwingConstants.RIGHT));
 		panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));
 		return (panel);
 	}
@@ -130,6 +155,10 @@ public class StatsDialog extends JDialog implements ActionListener {
 	private JPanel createButtonsPanel() {
 		JPanel panel = new JPanel();
 		panel.setLayout(new FlowLayout(FlowLayout.RIGHT));
+		refresh = new JButton("Refresh");
+		refresh.setActionCommand("refresh");
+		refresh.addActionListener(this);
+		panel.add(refresh);
 		close = new JButton("Close");
 		close.setActionCommand("close");
 		close.addActionListener(this);
@@ -173,6 +202,8 @@ public class StatsDialog extends JDialog implements ActionListener {
 				client.close();
 			}
 		}
+		root.removeAllChildren();
+		treeModel.nodeStructureChanged(root);
 		for (String key : commandResult.keySet()) {
 			Object object = commandResult.get(key);
 			DefaultMutableTreeNode dmtn = new DefaultMutableTreeNode(new CustomNode(key, object));
