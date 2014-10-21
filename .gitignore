@@ -4,3 +4,6 @@
 bin
 build
 dist
+.idea
+out
+MongoExplorer.iml
