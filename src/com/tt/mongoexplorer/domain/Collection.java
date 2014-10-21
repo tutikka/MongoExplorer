@@ -9,7 +9,7 @@ public class Collection {
 	
 	private Database database;
 	
-	private List<Index> indexes = new ArrayList<>();
+	private List<Index> indexes = new ArrayList<Index>();
 	
 	public Collection(String name, Database database) {
 		this.name = name;

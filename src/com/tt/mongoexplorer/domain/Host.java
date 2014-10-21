@@ -17,7 +17,7 @@ public class Host {
 	
 	private String authenticationDatabase;
 	
-	private List<Database> databases = new ArrayList<>();
+	private List<Database> databases = new ArrayList<Database>();
 	
 	public Host(String description, String address, int port) {
 		this.description = description;

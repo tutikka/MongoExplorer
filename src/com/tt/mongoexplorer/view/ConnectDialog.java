@@ -41,7 +41,7 @@ public class ConnectDialog extends JDialog implements ActionListener {
 	
 	private JTextField authenticationDatabase;
 	
-	private Set<ConnectCallback> callbacks = new HashSet<>();
+	private Set<ConnectCallback> callbacks = new HashSet<ConnectCallback>();
 	
 	public ConnectDialog(JFrame parent) {
 		super(parent);

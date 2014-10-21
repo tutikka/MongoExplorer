@@ -5,7 +5,7 @@ import java.util.List;
 
 public class Connections {
 
-	private List<Host> hosts = new ArrayList<>();
+	private List<Host> hosts = new ArrayList<Host>();
 	
 	public Connections() {
 	}

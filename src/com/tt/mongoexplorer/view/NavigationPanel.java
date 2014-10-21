@@ -56,7 +56,7 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 	
 	private CustomTreeCellRenderer customTreeCellRenderer = new CustomTreeCellRenderer();
 	
-	private Set<NavigationCallback> callbacks = new HashSet<>();
+	private Set<NavigationCallback> callbacks = new HashSet<NavigationCallback>();
 	
 	private Host selectedHost;
 	

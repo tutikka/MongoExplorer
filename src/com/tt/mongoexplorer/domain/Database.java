@@ -9,7 +9,7 @@ public class Database {
 
 	private Host host;
 	
-	private List<Collection> collections = new ArrayList<>();
+	private List<Collection> collections = new ArrayList<Collection>();
 	
 	public Database(String name, Host host) {
 		this.name = name;
