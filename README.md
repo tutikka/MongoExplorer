@@ -17,7 +17,7 @@ Mongo Explorer running on Windows 8.1.
 Requirements
 ------------
 
-- Java runtime environment 7 or later
+- Java runtime environment 6 or later
 - 5 MB of disk space
 
 Building from Source
