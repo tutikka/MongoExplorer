@@ -1,5 +1,5 @@
-MongoExplorer
-=============
+Mongo Explorer
+==============
 
 Cross-platform database management tool for MongoDB.
 
@@ -9,6 +9,10 @@ Screenshots
 Mongo Explorer running on Mac OS X.
 
 ![ScreenShot](/screenshots/ss_1.png)
+
+Mongo Explorer running on Linux Mint.
+
+![ScreenShot](/screenshots/ss_3.png)
 
 Mongo Explorer running on Windows 8.1.
 
