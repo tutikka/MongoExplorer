@@ -96,7 +96,9 @@ public class QueryPanel extends JPanel implements ActionListener, TreeSelectionL
 	}
 	
 	public void findAllDocuments() {
-		query.setText("");
+		query.setText("{  }");
+		query.setCaretPosition(2);
+		query.requestFocus();
 		Runnable runnable = new Runnable() {
 			@Override
 			public void run() {
@@ -245,13 +247,13 @@ public class QueryPanel extends JPanel implements ActionListener, TreeSelectionL
 		JPanel panel = new JPanel();
 		panel.setOpaque(false);
 		panel.setLayout(new GridLayout(1, 4));
-		host = new JLabel("[Not selected]", UIUtils.icon("resources/small/host.png"), SwingConstants.LEFT);
+		host = new JLabel("-", UIUtils.icon("resources/small/host.png"), SwingConstants.LEFT);
 		panel.add(host);
-		database = new JLabel("[Not selected]", UIUtils.icon("resources/small/database.png"), SwingConstants.CENTER);
+		database = new JLabel("-", UIUtils.icon("resources/small/database.png"), SwingConstants.CENTER);
 		panel.add(database);
-		collection = new JLabel("[Not selected]", UIUtils.icon("resources/small/collection.png"), SwingConstants.CENTER);
+		collection = new JLabel("-", UIUtils.icon("resources/small/collection.png"), SwingConstants.CENTER);
 		panel.add(collection);
-		time = new JLabel("[Not run]", UIUtils.icon("resources/small/time.png"), SwingConstants.RIGHT);
+		time = new JLabel("-", UIUtils.icon("resources/small/time.png"), SwingConstants.RIGHT);
 		panel.add(time);
 		panel.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
 		return (panel);
@@ -408,9 +410,9 @@ public class QueryPanel extends JPanel implements ActionListener, TreeSelectionL
 				DefaultMutableTreeNode dmtn = new DefaultMutableTreeNode(new CustomNode(key, dbo));
 				root.add(dmtn);
 				walk(dbo, dmtn);
-				treeModel.nodeStructureChanged(root);
 				count++;
 			}
+			treeModel.nodeStructureChanged(root);
 			time.setText((e - s) + " ms | " + count + "/" + cursor.count() + " document(s)");
 		} catch (Exception e) {
 			new ErrorDialog(parent, e);

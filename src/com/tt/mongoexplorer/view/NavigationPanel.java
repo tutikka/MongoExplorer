@@ -230,7 +230,7 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 	private JPopupMenu createMenuForHost() {
 		JPopupMenu menu = new JPopupMenu();
 		menu.setInvoker(tree);
-		JMenuItem createDatabase = new JMenuItem("Create database");
+		JMenuItem createDatabase = new JMenuItem("Create database...");
 		createDatabase.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -271,7 +271,7 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 	private JPopupMenu createMenuForDatabase() {
 		JPopupMenu menu = new JPopupMenu();
 		menu.setInvoker(tree);
-		JMenuItem createCollection = new JMenuItem("Create collection");
+		JMenuItem createCollection = new JMenuItem("Create collection...");
 		createCollection.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -287,8 +287,16 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 			}
 		});
 		menu.add(dropDatabase);
+		JMenuItem executeCommand = new JMenuItem("Execute command...");
+		executeCommand.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				executeCommand();
+			}
+		});
+		menu.add(executeCommand);
 		menu.addSeparator();
-		JMenuItem viewDatabaseStats = new JMenuItem("View statistics...");
+		JMenuItem viewDatabaseStats = new JMenuItem("View statistics");
 		viewDatabaseStats.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -349,6 +357,10 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 				}
 			}
 		}
+	}
+	
+	private void executeCommand() {
+		new CommandDialog(parent, selectedDatabase);
 	}
 	
 	private void viewDatabaseStats() {
@@ -415,7 +427,7 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 		});
 		menu.add(createIndex);
 		menu.addSeparator();
-		JMenuItem viewCollectionStats = new JMenuItem("View statistics...");
+		JMenuItem viewCollectionStats = new JMenuItem("View statistics");
 		viewCollectionStats.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
