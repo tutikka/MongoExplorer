@@ -1,12 +1,8 @@
 package com.tt.mongoexplorer.view;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.GridLayout;
-import java.awt.Insets;
+import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -266,6 +262,14 @@ public class QueryPanel extends JPanel implements ActionListener, TreeSelectionL
 	private JPopupMenu createMenuForDocument() {
 		JPopupMenu menu = new JPopupMenu();
 		menu.setInvoker(tree);
+        JMenuItem copyDocument = new JMenuItem("Copy document to clipboard");
+        copyDocument.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                copyDocument();
+            }
+        });
+        menu.add(copyDocument);
 		JMenuItem editDocument = new JMenuItem("Edit document...");
 		editDocument.addActionListener(new ActionListener() {
 			@Override
@@ -286,7 +290,28 @@ public class QueryPanel extends JPanel implements ActionListener, TreeSelectionL
 		menu.setOpaque(true);
 		return (menu);
 	}
-	
+
+    private void copyDocument() {
+        DefaultMutableTreeNode dmtn = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+        if (dmtn == null) {
+            return;
+        }
+        TreeNode[] path = dmtn.getPath();
+        if (path == null) {
+            return;
+        }
+        if (path.length > 0) {
+            DefaultMutableTreeNode root = (DefaultMutableTreeNode) path[1];
+            if (root == null) {
+                return;
+            }
+            CustomNode customNode = (CustomNode) root.getUserObject();
+            StringSelection stringSelection = new StringSelection(customNode.object.toString());
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            clipboard.setContents(stringSelection, null);
+        }
+    }
+
 	private void editDocument() {
 		DefaultMutableTreeNode dmtn = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
 		if (dmtn == null) {
