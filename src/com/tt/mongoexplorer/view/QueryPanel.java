@@ -11,6 +11,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -75,7 +77,9 @@ public class QueryPanel extends JPanel implements ActionListener, TreeSelectionL
 	private JLabel time;
 	
 	private Collection selectedCollection;
-	
+
+    private ExecutorService es = Executors.newSingleThreadExecutor();
+
 	public QueryPanel(MainFrame parent, Collection collection) {
 		this.parent = parent;
 		this.selectedCollection = collection;
@@ -107,7 +111,7 @@ public class QueryPanel extends JPanel implements ActionListener, TreeSelectionL
 				find.setEnabled(true);
 			}
 		};
-		SwingUtilities.invokeLater(runnable);
+		es.submit(runnable);
 	}
 	
 	@Override
@@ -125,7 +129,7 @@ public class QueryPanel extends JPanel implements ActionListener, TreeSelectionL
 					find.setEnabled(true);
 				}
 			};
-			SwingUtilities.invokeLater(runnable);
+			es.submit(runnable);
 		}
 	}
 	
@@ -332,7 +336,7 @@ public class QueryPanel extends JPanel implements ActionListener, TreeSelectionL
 							find.setEnabled(true);
 						}
 					};
-					SwingUtilities.invokeLater(runnable);
+					es.submit(runnable);
 				} catch (Exception e) {
 					new ErrorDialog(parent, e);
 				} finally {

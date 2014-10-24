@@ -7,6 +7,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -17,7 +19,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
 
 import com.mongodb.DBCursor;
 import com.mongodb.MongoClient;
@@ -62,7 +63,9 @@ public class ExportCollectionDialog extends JDialog implements ActionListener, I
 	private JButton cancel;
 	
 	private JButton ok;
-	
+
+    private ExecutorService es = Executors.newSingleThreadExecutor();
+
 	public ExportCollectionDialog(JFrame parent, Connections connections, Collection collection) {
 		super(parent);
 		setTitle("Export Collection");
@@ -120,7 +123,7 @@ public class ExportCollectionDialog extends JDialog implements ActionListener, I
 					}
 				}
 			};
-			SwingUtilities.invokeLater(runnable);
+			es.submit(runnable);
 		}
 	}
 

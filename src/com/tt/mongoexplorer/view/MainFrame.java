@@ -11,6 +11,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
@@ -23,7 +25,6 @@ import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 import javax.swing.border.EtchedBorder;
 
@@ -38,7 +39,9 @@ public class MainFrame extends JFrame implements ActionListener, NavigationCallb
 	private NavigationPanel navigationPanel = new NavigationPanel(this);
 	
 	private JTabbedPane contentPanel = new JTabbedPane(JTabbedPane.TOP, JTabbedPane.SCROLL_TAB_LAYOUT);
-	
+
+    private ExecutorService es = Executors.newSingleThreadExecutor();
+
 	public MainFrame() {
 		setTitle(Constants.NAME + " - " + Constants.VERSION);
 		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -76,7 +79,7 @@ public class MainFrame extends JFrame implements ActionListener, NavigationCallb
 		setVisible(true);
 		
 		// open connect dialog by default
-		SwingUtilities.invokeLater(new Runnable() {
+		es.submit(new Runnable() {
 			@Override
 			public void run() {
 				ConnectDialog connectDialog = new ConnectDialog(MainFrame.this);

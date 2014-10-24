@@ -6,6 +6,8 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -16,7 +18,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
 
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
@@ -41,7 +42,9 @@ public class EditDocumentDialog extends JDialog implements ActionListener {
 	private Collection collection;
 	
 	private DBObject object;
-	
+
+    private ExecutorService es = Executors.newSingleThreadExecutor();
+
 	public EditDocumentDialog(JFrame parent, Collection collection, DBObject object) {
 		super(parent);
 		this.collection = collection;
@@ -82,7 +85,7 @@ public class EditDocumentDialog extends JDialog implements ActionListener {
 					}
 				}
 			};
-			SwingUtilities.invokeLater(runnable);
+			es.submit(runnable);
 		}
 	}
 	

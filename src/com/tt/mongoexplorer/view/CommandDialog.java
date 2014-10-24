@@ -17,6 +17,8 @@ import javax.swing.tree.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @SuppressWarnings("serial")
 public class CommandDialog extends JDialog implements ActionListener, TreeSelectionListener {
@@ -46,6 +48,8 @@ public class CommandDialog extends JDialog implements ActionListener, TreeSelect
 	private JLabel time;
 
 	private Database selectedDatabase;
+
+    private ExecutorService es = Executors.newSingleThreadExecutor();
 
 	public CommandDialog(JFrame parent, Database database) {
 		super(parent);
@@ -89,7 +93,7 @@ public class CommandDialog extends JDialog implements ActionListener, TreeSelect
 					execute.setEnabled(true);
 				}
 			};
-			SwingUtilities.invokeLater(runnable);
+			es.submit(runnable);
 		}
 	}
 	

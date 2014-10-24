@@ -8,6 +8,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.swing.BorderFactory;
 import javax.swing.JMenuItem;
@@ -65,7 +67,9 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 	private Collection selectedCollection;
 	
 	private Index selectedIndex;
-	
+
+    private ExecutorService es = Executors.newSingleThreadExecutor();
+
 	public NavigationPanel(MainFrame parent) {
 		this.parent = parent;
 		
@@ -156,7 +160,7 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 				}
 			}
 		};
-		SwingUtilities.invokeLater(runnable);
+        es.submit(runnable);
 	}
 	
 	// *********

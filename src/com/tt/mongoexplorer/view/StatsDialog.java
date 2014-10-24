@@ -7,6 +7,8 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -17,7 +19,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
@@ -51,7 +52,9 @@ public class StatsDialog extends JDialog implements ActionListener {
 	private JButton refresh;
 	
 	private Object source;
-	
+
+    private ExecutorService es = Executors.newSingleThreadExecutor();
+
 	public StatsDialog(JFrame parent, Object source) {
 		super(parent);
 		this.source = source;
@@ -79,7 +82,7 @@ public class StatsDialog extends JDialog implements ActionListener {
 				refresh.setEnabled(true);
 			}
 		};
-		SwingUtilities.invokeLater(runnable);
+		es.submit(runnable);
 		
 		setVisible(true);
 	}
@@ -95,7 +98,7 @@ public class StatsDialog extends JDialog implements ActionListener {
 					refresh.setEnabled(true);
 				}
 			};
-			SwingUtilities.invokeLater(runnable);
+			es.submit(runnable);
 		}
 		if ("close".equals(e.getActionCommand())) {
 			dispose();
