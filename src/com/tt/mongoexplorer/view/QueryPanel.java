@@ -278,6 +278,7 @@ public class QueryPanel extends JPanel implements ActionListener, TreeSelectionL
 			}
 		});
 		menu.add(editDocument);
+        menu.addSeparator();
 		JMenuItem deleteDocument = new JMenuItem("Delete document");
 		deleteDocument.addActionListener(new ActionListener() {
 			@Override

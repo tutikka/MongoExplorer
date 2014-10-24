@@ -283,6 +283,15 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 			}
 		});
 		menu.add(createCollection);
+        JMenuItem executeCommand = new JMenuItem("Execute command...");
+        executeCommand.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                executeCommand();
+            }
+        });
+        menu.add(executeCommand);
+        menu.addSeparator();
 		JMenuItem dropDatabase = new JMenuItem("Drop database");
 		dropDatabase.addActionListener(new ActionListener() {
 			@Override
@@ -291,14 +300,6 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 			}
 		});
 		menu.add(dropDatabase);
-		JMenuItem executeCommand = new JMenuItem("Execute command...");
-		executeCommand.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				executeCommand();
-			}
-		});
-		menu.add(executeCommand);
 		menu.addSeparator();
 		JMenuItem viewDatabaseStats = new JMenuItem("View statistics");
 		viewDatabaseStats.addActionListener(new ActionListener() {
@@ -398,14 +399,14 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 			}
 		});
 		menu.add(insertDocument);
-		JMenuItem deleteAllDocuments = new JMenuItem("Delete all documents");
-		deleteAllDocuments.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				deleteAllDocuments();
-			}
-		});
-		menu.add(deleteAllDocuments);
+        JMenuItem createIndex = new JMenuItem("Create index...");
+        createIndex.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                createIndex();
+            }
+        });
+        menu.add(createIndex);
 		JMenuItem exportCollection = new JMenuItem("Export collection...");
 		exportCollection.addActionListener(new ActionListener() {
 			@Override
@@ -414,6 +415,15 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 			}
 		});
 		menu.add(exportCollection);
+        menu.addSeparator();
+        JMenuItem deleteAllDocuments = new JMenuItem("Delete all documents");
+        deleteAllDocuments.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                deleteAllDocuments();
+            }
+        });
+        menu.add(deleteAllDocuments);
 		JMenuItem dropCollection = new JMenuItem("Drop collection");
 		dropCollection.addActionListener(new ActionListener() {
 			@Override
@@ -422,14 +432,6 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 			}
 		});
 		menu.add(dropCollection);
-		JMenuItem createIndex = new JMenuItem("Create index...");
-		createIndex.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				createIndex();
-			}
-		});
-		menu.add(createIndex);
 		menu.addSeparator();
 		JMenuItem viewCollectionStats = new JMenuItem("View statistics");
 		viewCollectionStats.addActionListener(new ActionListener() {
