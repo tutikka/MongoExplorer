@@ -3,6 +3,11 @@ Mongo Explorer
 
 Cross-platform database management tool for MongoDB.
 
+Download
+--------
+
+[mongoexplorer-0.1.0.tar.gz](https://github.com/tutikka/MongoExplorer/raw/master/releases/mongoexplorer-0.1.0.tar.gz)
+
 Screenshots
 -----------
 
