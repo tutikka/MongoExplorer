@@ -11,14 +11,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import javax.swing.BorderFactory;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JScrollPane;
-import javax.swing.JTree;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -242,6 +235,15 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 			}
 		});
 		menu.add(createDatabase);
+        menu.addSeparator();
+        final JMenuItem disconnect = new JMenuItem("Disconnect");
+        disconnect.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                disconnect();
+            }
+        });
+        menu.add(disconnect);
 		menu.setLightWeightPopupEnabled(true);
 		menu.setOpaque(true);
 		return (menu);
@@ -271,7 +273,20 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 			}
 		}
 	}
-	
+
+    private void disconnect() {
+        int option = JOptionPane.showConfirmDialog(parent, "Are you sure you want to disconnect (and close all related queries)?", "Disconnect", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, UIUtils.icon("resources/large/host.png"));
+        if (option == JOptionPane.YES_OPTION) {
+            DefaultMutableTreeNode dmtn = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+            DefaultMutableTreeNode parent = (DefaultMutableTreeNode) dmtn.getParent();
+            if (dmtn.getUserObject() instanceof Host) {
+                disconnectFromHost();
+                treeModel.removeNodeFromParent(dmtn);
+                tree.setSelectionPath(new TreePath(parent.getPath()));
+            }
+        }
+    }
+
 	private JPopupMenu createMenuForDatabase() {
 		JPopupMenu menu = new JPopupMenu();
 		menu.setInvoker(tree);
@@ -457,6 +472,12 @@ public class NavigationPanel extends JPanel implements ConnectCallback, TreeSele
 			callback.onFindAllDocumentsRequested(selectedCollection);
 		}
 	}
+
+    private void disconnectFromHost() {
+        for (NavigationCallback callback : callbacks) {
+            callback.onDisconnectFromHostRequested(selectedHost);
+        }
+    }
 	
 	private void insertDocument() {
 		new InsertDocumentDialog(parent, selectedCollection);

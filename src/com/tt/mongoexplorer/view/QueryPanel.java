@@ -72,7 +72,7 @@ public class QueryPanel extends JPanel implements ActionListener, TreeSelectionL
 	
 	private JLabel time;
 	
-	private Collection selectedCollection;
+	Collection selectedCollection;
 
     private ExecutorService es = Executors.newSingleThreadExecutor();
 
@@ -88,7 +88,7 @@ public class QueryPanel extends JPanel implements ActionListener, TreeSelectionL
 		
 		updateInfo();
 	}
-	
+
 	public void openQueryWindow() {
 		query.setText("{  }");
 		query.setCaretPosition(2);

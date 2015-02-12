@@ -25,7 +25,17 @@ public class Host {
 		this.port = port;
 	}
 
-	@Override
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Host) {
+            Host other = (Host) obj;
+            return (address.equals(other.address) && port == other.port);
+        } else {
+            return (false);
+        }
+    }
+
+    @Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append(description);

@@ -1,12 +1,6 @@
 package com.tt.mongoexplorer.view;
 
-import java.awt.Dimension;
-import java.awt.DisplayMode;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.GridLayout;
-import java.awt.Insets;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -30,6 +24,7 @@ import javax.swing.border.EtchedBorder;
 
 import com.tt.mongoexplorer.callback.NavigationCallback;
 import com.tt.mongoexplorer.domain.Collection;
+import com.tt.mongoexplorer.domain.Host;
 import com.tt.mongoexplorer.utils.Constants;
 import com.tt.mongoexplorer.utils.UIUtils;
 
@@ -128,12 +123,24 @@ public class MainFrame extends JFrame implements ActionListener, NavigationCallb
 		contentPanel.setSelectedComponent(queryPanel);
 		queryPanel.findAllDocuments();
 	}
-	
+
+    @Override
+    public void onDisconnectFromHostRequested(Host host) {
+        for (Component component : contentPanel.getComponents()) {
+            if (component instanceof QueryPanel) {
+                QueryPanel queryPanel = (QueryPanel) component;
+                if (host.equals(queryPanel.selectedCollection.getDatabase().getHost())) {
+                    contentPanel.remove(component);
+                }
+            }
+        }
+    }
+
 	// *********
 	// private
 	// *********
 	
-	private JPanel createTabTitlePanel(String title, final JPanel content) {
+	private JPanel createTabTitlePanel(String title, final QueryPanel queryPanel) {
 		JPanel panel = new JPanel();
 		panel.setOpaque(false);
 		panel.setLayout(new GridBagLayout());
@@ -152,7 +159,7 @@ public class MainFrame extends JFrame implements ActionListener, NavigationCallb
 		closeLabel.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				contentPanel.remove(content);
+				contentPanel.remove(queryPanel);
 			}
 		});
 		panel.add(closeLabel, c);
