@@ -3,10 +3,33 @@ Mongo Explorer
 
 Cross-platform database management tool for MongoDB.
 
+Requirements
+------------
+
+- Java runtime environment 6 or later
+- 5 MB of disk space
+
 Download
 --------
 
 [mongoexplorer-0.1.0.tar.gz](https://github.com/tutikka/MongoExplorer/raw/master/releases/mongoexplorer-0.1.0.tar.gz)
+
+Installation
+------------
+
+MacOS and Linux:
+
+```
+$ tar zfxv mongoexplorer-0.1.0.tar.gz
+$ cd mongoexplorer-0.1.0
+$ sh ./mongoexplorer.sh 
+```
+
+Windows:
+
+1. Unzip mongoexplorer-0.1.0.zip (for example using WinZip, WinRar, etc.)
+2. Go to the created ``mongoexplorer-0.1.0`` folder and double-click ``mongoexplorer.cmd`` 
+
 
 Screenshots
 -----------
@@ -22,12 +45,6 @@ Mongo Explorer running on Linux Mint.
 Mongo Explorer running on Windows 8.1.
 
 ![ScreenShot](/screenshots/ss_2.png)
-
-Requirements
-------------
-
-- Java runtime environment 6 or later
-- 5 MB of disk space
 
 Building from Source
 --------------------
