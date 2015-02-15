@@ -58,7 +58,7 @@ public class UIUtils {
 		JOptionPane.showMessageDialog(parent, message, "Oops!", JOptionPane.ERROR_MESSAGE, UIUtils.icon("resources/large/error.png"));
 	}
 	
-	public static Icon icon(String path) {
+	public static ImageIcon icon(String path) {
 		File file = new File(path);
 		if (file.exists()) {
 			return (new ImageIcon(path));
