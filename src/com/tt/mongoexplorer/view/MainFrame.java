@@ -43,7 +43,7 @@ public class MainFrame extends JFrame implements ActionListener, NavigationCallb
 		setSize(Constants.DEFAULT_WINDOW_WIDTH, Constants.DEFAULT_WINDOW_HEIGHT);
 		setMinimumSize(new Dimension(Constants.MIMIMUM_WINDOW_WIDTH, Constants.MINIMUM_WINDOW_HEIGHT));
 
-        setIconImage(UIUtils.icon("resources/small/database.png").getImage());
+        setIconImage(UIUtils.icon("resources/special/icon.png").getImage());
 
 		setJMenuBar(createMenuBar());
 		
