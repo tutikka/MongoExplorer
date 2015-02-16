@@ -12,11 +12,13 @@ import java.util.concurrent.Executors;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.SpringLayout;
 import javax.swing.SwingConstants;
 
@@ -59,6 +61,10 @@ public class ExportCollectionDialog extends JDialog implements ActionListener, I
 	private JLabel tgtCollectionLabel;
 	
 	private JComboBox<Collection> tgtCollection;
+	
+	private JCheckBox tgtCreateNewCollection;
+	
+	private JTextField tgtNewCollection;
 	
 	private JButton cancel;
 	
@@ -219,6 +225,11 @@ public class ExportCollectionDialog extends JDialog implements ActionListener, I
 		tgtCollection = new JComboBox<Collection>();
 		tgtCollection.addItemListener(this);
 		target.add(tgtCollection);
+		tgtCreateNewCollection = new JCheckBox("Create new collection");
+		target.add(tgtCreateNewCollection);
+		tgtNewCollection = new JTextField("Name", 16);
+		tgtNewCollection.setEnabled(false);
+		target.add(tgtNewCollection);
 		SpringLayout slTarget = new SpringLayout();
 		slTarget.putConstraint(SpringLayout.WEST, tgtHostLabel, 10, SpringLayout.WEST, target);
 		slTarget.putConstraint(SpringLayout.NORTH, tgtHostLabel, 10, SpringLayout.NORTH, target);
@@ -232,10 +243,30 @@ public class ExportCollectionDialog extends JDialog implements ActionListener, I
 		slTarget.putConstraint(SpringLayout.NORTH, tgtCollectionLabel, 10, SpringLayout.SOUTH, tgtDatabase);
 		slTarget.putConstraint(SpringLayout.WEST, tgtCollection, 10, SpringLayout.WEST, target);
 		slTarget.putConstraint(SpringLayout.NORTH, tgtCollection, 10, SpringLayout.SOUTH, tgtCollectionLabel);
+		slTarget.putConstraint(SpringLayout.WEST, tgtCreateNewCollection, 10, SpringLayout.WEST, target);
+		slTarget.putConstraint(SpringLayout.NORTH, tgtCreateNewCollection, 10, SpringLayout.SOUTH, tgtCollection);
+		slTarget.putConstraint(SpringLayout.WEST, tgtNewCollection, 10, SpringLayout.WEST, target);
+		slTarget.putConstraint(SpringLayout.NORTH, tgtNewCollection, 10, SpringLayout.SOUTH, tgtCreateNewCollection);
+		
 		target.setLayout(slTarget);
 		
 		panel.add(source);
 		panel.add(target);
+		
+		tgtCreateNewCollection.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (tgtCreateNewCollection.isSelected()) {
+					tgtNewCollection.setText("");
+					tgtNewCollection.setEnabled(true);
+					tgtCollection.setEnabled(false);
+				} else {
+					tgtNewCollection.setText("Name");
+					tgtNewCollection.setEnabled(false);
+					tgtCollection.setEnabled(true);
+				}
+			}
+		});
 		
 		return (panel);
 	}
@@ -260,10 +291,18 @@ public class ExportCollectionDialog extends JDialog implements ActionListener, I
 		try {
 			sourceClient = MongoUtils.getMongoClient(source.getDatabase().getHost());
 			targetClient = MongoUtils.getMongoClient(target.getDatabase().getHost());
+			String targetCollectionName = target.getName();
+			if (tgtCreateNewCollection.isSelected()) {
+				targetCollectionName = tgtNewCollection.getText();
+				if (targetCollectionName == null || targetCollectionName.isEmpty()) {
+					UIUtils.error(this, "Please enter the new collection name");
+					return (-1);
+				}
+ 			}
 			DBCursor cursor = sourceClient.getDB(source.getDatabase().getName()).getCollection(source.getName()).find();
 			int count = 0;
 			while (cursor.hasNext()) {
-				targetClient.getDB(target.getDatabase().getName()).getCollection(target.getName()).insert(cursor.next());
+				targetClient.getDB(target.getDatabase().getName()).getCollection(targetCollectionName).insert(cursor.next());
 				count++;
 			}
 			return (count);
