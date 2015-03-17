@@ -15,7 +15,7 @@
   	</target>
 
   	<target name="compile" depends="clean, init" description="compile the source " >
-  		<javac includeantruntime="false" sourcepath="" srcdir="${src}" destdir="${build}">
+  		<javac target="1.6" source="1.6" includeantruntime="false" srcdir="${src}" destdir="${build}">
   	  		<classpath>
   	  	      	<pathelement path="${classpath}"/>
   	  	      	<fileset dir="libs">
